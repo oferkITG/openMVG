@@ -41,3 +41,11 @@ RUN mkdir /opt/openMVG_Build; \
     make -j 4;
 
 RUN cd /opt/openMVG_Build && make test && make install;
+
+RUN sudo apt-get update && sudo apt-get install -y \
+    python3-pip \
+    ffmpeg libsm6 libxext6
+    
+RUN pip3 install -y \
+    scipy \
+    opencv-python
