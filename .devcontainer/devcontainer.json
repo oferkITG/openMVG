@@ -31,6 +31,7 @@
 		"source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent,type=bind,consistency=cached",
 		"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
 		"source=/home/${localEnv:USERNAME}/.ssh,target=/home/${localEnv:USERNAME}/.ssh,type=bind,consistency=cached",
+		"source=/home/${localEnv:USERNAME}/DATA,target=/DATA,type=bind,consistency=cached",
 	],
 	// "postCreateCommand": "sudo chown -R ${localEnv:USERNAME} /home/ws/",
 	"customizations": {
