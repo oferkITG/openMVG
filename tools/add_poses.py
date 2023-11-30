@@ -27,7 +27,7 @@ def make_AR_poses_dict(ARposes_filepath: str):
     return arposes
     
 
-def add_poses(Frames_filepath, ARposes_filepath, sfm_data_file, output_file):
+def add_poses_to_sfm_data(Frames_filepath, ARposes_filepath, sfm_data_file, output_file):
     # match frames to arposes by timestamp
     frames = make_timestamp_frameIdx_dict(Frames_filepath)
     arposes = make_AR_poses_dict(ARposes_filepath)
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     sfm_data_file = '/DATA/ITG/ios_logger_noDepth/2023-11-27T09-37-23/openMVG_out/matches/sfm_data.json'
     output_file = '/DATA/ITG/ios_logger_noDepth/2023-11-27T09-37-23/openMVG_out/matches/sfm_data_test.json'
 
-    add_poses(Frames_filepath, ARposes_filepath, sfm_data_file, output_file)
+    add_poses_to_sfm_data(Frames_filepath, ARposes_filepath, sfm_data_file, output_file)
     
         
         
