@@ -36,7 +36,7 @@ class SfM_Data_GT_Loader_ARkit : public SfM_Data_GT_Loader_Interface
 {
 private:
     std::vector<cameras::PinholeCamera> cameras_data_; // Store all the camera information
-    std::map<int, Cameras_Data_ARkit> camera_datas; // Store all the dataset camera data
+    std::map<double, Cameras_Data_ARkit> camera_datas; // Store all the dataset camera data
 public:
     bool loadGT() override
     {
