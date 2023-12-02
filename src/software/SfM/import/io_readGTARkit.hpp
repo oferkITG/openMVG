@@ -16,6 +16,7 @@
 #include <string>
 //#include <fstream>
 //#include <iomanip>
+#include <math.h>
 
 //timestamp, frame id, flx, fly, px, py
 struct Cameras_Data_ARkit
@@ -114,6 +115,9 @@ public:
         gt_file.clear(std::ios::goodbit);
         gt_file.seekg(std::ios::beg);
 
+        Vec3 prev_t;
+        Eigen::Quaterniond prev_qt;
+
         while (gt_file)
         {
             std::string line;
@@ -153,34 +157,143 @@ public:
             if (camera_datas.find(timestamp) == camera_datas.end())
                 continue;
 
-            Cameras_Data_ARkit temp_camera = camera_datas[timestamp];
-            double focus = (temp_camera.parameter_[0] + temp_camera.parameter_[1]) / 2;
-            K << focus, 0, temp_camera.parameter_[2],
-                0, focus, temp_camera.parameter_[3],
-                0, 0, 1;
+            double del_qt = quaternionf_rotation.angularDistance(prev_qt); //radian
+            double del_t = sqrt((t.x() - prev_t.x()) * (t.x() - prev_t.x()) + (t.y() - prev_t.y()) * (t.y() - prev_t.y()) + (t.z() - prev_t.z()) * (t.z() - prev_t.z()));
 
-            // Read feature observations line.
-            // No use for us
-            std::getline(gt_file, line);
+            if (del_qt > 5.0 / 180.0 * M_PI || del_t > 0.5) {
+                prev_qt = quaternionf_rotation;
+                prev_t = t;
 
-            Mat34 P;
-            P_From_KRt(K, R, t, &P);
-            cameras_data_.emplace_back(P);
+                Cameras_Data_ARkit temp_camera = camera_datas[timestamp];
+                double focus = (temp_camera.parameter_[0] + temp_camera.parameter_[1]) / 2;
+                K << focus, 0, temp_camera.parameter_[2],
+                    0, focus, temp_camera.parameter_[3],
+                    0, 0, 1;
 
-            int image_id = temp_camera.id_;
-            std::string image_name = "frame" + std::to_string(image_id) + ".jpg";
+                // Read feature observations line.
+                // No use for us
+                std::getline(gt_file, line);
 
-            // Parse image name
-            images_.emplace_back(stlplus::filename_part(image_name));
+                Mat34 P;
+                P_From_KRt(K, R, t, &P);
+                cameras_data_.emplace_back(P);
+
+                int image_id = temp_camera.id_;
+                std::string image_name = "frame" + std::to_string(image_id) + ".jpg";
+
+                // Parse image name
+                images_.emplace_back(stlplus::filename_part(image_name));
+            }
         }
         gt_file.close();
 
         return true;
     }
 
+    bool LoadImages_
+    (
+        const std::string& image_dir,
+        const std::vector<std::string>& images,
+        const std::vector<openMVG::cameras::PinholeCamera>& cameras,
+        openMVG::sfm::SfM_Data& sfm_data
+    ) 
+    {
+        if (image_dir.empty() || !stlplus::is_folder(image_dir))
+        {
+            OPENMVG_LOG_ERROR << "Invalid input image directory";
+            return false;
+        }
+        if (images.empty())
+        {
+            OPENMVG_LOG_ERROR << "Invalid input image sequence";
+            return false;
+        }
+        if (cameras.empty())
+        {
+            OPENMVG_LOG_ERROR << "Invalid input camera data";
+            return false;
+        }
+
+        sfm_data.s_root_path = image_dir; // Setup main image root_path
+
+        Views& views = sfm_data.views;
+        Poses& poses = sfm_data.poses;
+        Intrinsics& intrinsics = sfm_data.intrinsics;
+
+        Pose3 prv_pose = Pose3();
+
+        system::LoggerProgress my_progress_bar(images.size(), "- Loading dataset images -");
+        std::ostringstream error_report_stream;
+        auto iter_camera = cameras.cbegin();
+        for (auto iter_image = images.cbegin();
+            iter_image != images.cend();
+            ++iter_image, ++iter_camera, ++my_progress_bar)
+        {
+            const std::string sImageFilename = stlplus::create_filespec(image_dir, *iter_image);
+            const std::string sImFilenamePart = stlplus::filename_part(sImageFilename);
+
+            // Test if the image format is supported
+            if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
+            {
+                error_report_stream
+                    << sImFilenamePart << ": Unkown image file format." << "\n";
+                continue; // Image cannot be opened
+            }
+
+            if (sImFilenamePart.find("mask.png") != std::string::npos
+                || sImFilenamePart.find("_mask.png") != std::string::npos)
+            {
+                error_report_stream
+                    << sImFilenamePart << " is a mask image" << "\n";
+                continue;
+            }
+
+            // Test if this image can be read
+            openMVG::image::ImageHeader imgHeader;
+            if (!openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
+                continue; // Image cannot be read
+
+            const Mat3 K = iter_camera->_K;
+            const double focal = (K(0, 0) + K(1, 1)) / 2.0; //Assume K(0,0)==K(1,1)
+            const double pxx = K(0, 2);
+            const double pyy = K(1, 2);
+
+            const Pose3 pose(iter_camera->_R, iter_camera->_t);
+            const auto view = std::make_shared<sfm::View>(
+                *iter_image,
+                views.size(), views.size(), views.size(),
+                imgHeader.width, imgHeader.height);
+            const auto intrinsic = std::make_shared<openMVG::cameras::Pinhole_Intrinsic>(
+                imgHeader.width, imgHeader.height,
+                focal, pxx, pyy);
+
+            // Add the view to the sfm_container
+            views[view->id_view] = view;
+            // Add the pose to the sfm_container
+            poses[view->id_pose] = pose;
+            // Add the intrinsic to the sfm_container
+            intrinsics[view->id_intrinsic] = intrinsic;
+
+            prv_pose = pose;
+        }
+
+        // Display saved warning & error messages if any.
+        if (!error_report_stream.str().empty())
+        {
+            OPENMVG_LOG_ERROR
+                << "\nWarning & Error messages:\n"
+                << error_report_stream.str() << std::endl;
+        }
+
+        // Group the camera that share the same set of camera parameters
+        GroupSharedIntrinsics(sfm_data);
+
+        return true;
+    }
+
     bool loadImages() override
     {
-        return LoadImages(this->image_dir_, this->images_, this->cameras_data_, this->sfm_data_);
+        return LoadImages_(this->image_dir_, this->images_, this->cameras_data_, this->sfm_data_);
     }
 };
 
