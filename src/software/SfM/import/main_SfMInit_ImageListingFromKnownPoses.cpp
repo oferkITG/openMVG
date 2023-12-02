@@ -37,6 +37,7 @@
 #include "io_readGTKitti.hpp"
 #include "io_readGTMiddleBury.hpp"
 #include "io_readGTStrecha.hpp"
+#include "io_readGTARkit.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -81,6 +82,7 @@ int main(int argc, char **argv)
         << "\t 5: Kitti Odometry Dataset\n"
         << "\t 6: BlendedMVS Dataset\n"
         << "\t 7: Multiface Dataset\n"
+        << "\t 8: ARkit Dataset\n"
         << "[-o|--outputDirectory]\n";
 
       OPENMVG_LOG_ERROR << s;
@@ -148,6 +150,9 @@ int main(int argc, char **argv)
       break;
     case 7:
       sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_Multiface>();
+      break;
+    case 8:
+      sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_ARkit>();
       break;
     default:
       OPENMVG_LOG_ERROR << "Error: Not Support Dataset";
