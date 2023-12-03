@@ -45,7 +45,7 @@ public:
         const std::vector<std::string> gt_files = stlplus::folder_files(this->gt_dir_);
 
         // Make sure there we have the desired file on disk
-        if (!std::count(gt_files.cbegin(), gt_files.cend(), std::string("Frames.txt"))
+        if (!std::count(gt_files.cbegin(), gt_files.cend(), std::string("Frames_short.txt"))
             || !std::count(gt_files.cbegin(), gt_files.cend(), std::string("ARposes.txt")))
         {
             std::cerr << "Error: Maybe give wrong gt_dir!" << std::endl
@@ -55,10 +55,10 @@ public:
 
         // Read the camera file
         // Fix name "Frames.txt"
-        std::ifstream camera_data_file(stlplus::create_filespec(this->gt_dir_, "Frames.txt"), std::ifstream::in);
+        std::ifstream camera_data_file(stlplus::create_filespec(this->gt_dir_, "Frames_short.txt"), std::ifstream::in);
         if (!camera_data_file)
         {
-            std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "Frames.txt") << "' for reading" << std::endl;
+            std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "Frames_short.txt") << "' for reading" << std::endl;
             return false;
         }
         while (camera_data_file)
@@ -143,16 +143,22 @@ public:
             t(1, 0) = stod(substring);
             std::getline(image_stream, substring, ',');
             t(2, 0) = stod(substring);
-            std::getline(image_stream, substring, ',');
-            quaternionf_rotation.w() = stod(substring);
+            
             std::getline(image_stream, substring, ',');
             quaternionf_rotation.x() = stod(substring);
             std::getline(image_stream, substring, ',');
             quaternionf_rotation.y() = stod(substring);
             std::getline(image_stream, substring, ',');
             quaternionf_rotation.z() = stod(substring);
+            std::getline(image_stream, substring, ',');
+            quaternionf_rotation.w() = stod(substring);
 
+            t.z() = -t.z();
+            t.y() = -t.y();
+            
             R = quaternionf_rotation.toRotationMatrix();
+            const Mat3 transform_matrix = (Mat3() << 1, 1, 1, -1, -1, -1, -1, -1, -1).finished();
+            const Mat3 fixed_rotation = transform_matrix.cwiseProduct(R.transpose());
 
             t = - R * t;
 
