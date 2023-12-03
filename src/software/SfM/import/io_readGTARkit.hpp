@@ -16,6 +16,7 @@
 #include <string>
 //#include <fstream>
 //#include <iomanip>
+#include <math.h>
 
 //timestamp, frame id, flx, fly, px, py
 struct Cameras_Data_ARkit
@@ -114,6 +115,9 @@ public:
         gt_file.clear(std::ios::goodbit);
         gt_file.seekg(std::ios::beg);
 
+        Vec3 prev_t;
+        Eigen::Quaterniond prev_qt;
+
         while (gt_file)
         {
             std::string line;
@@ -150,28 +154,38 @@ public:
 
             R = quaternionf_rotation.toRotationMatrix();
 
+            t = - R * t;
+
             if (camera_datas.find(timestamp) == camera_datas.end())
                 continue;
 
-            Cameras_Data_ARkit temp_camera = camera_datas[timestamp];
-            double focus = (temp_camera.parameter_[0] + temp_camera.parameter_[1]) / 2;
-            K << focus, 0, temp_camera.parameter_[2],
-                0, focus, temp_camera.parameter_[3],
-                0, 0, 1;
+            double del_qt = quaternionf_rotation.angularDistance(prev_qt); //radian
+            double del_t = sqrt((t.x() - prev_t.x()) * (t.x() - prev_t.x()) + (t.y() - prev_t.y()) * (t.y() - prev_t.y()) + (t.z() - prev_t.z()) * (t.z() - prev_t.z()));
 
-            // Read feature observations line.
-            // No use for us
-            std::getline(gt_file, line);
+            if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
+                prev_qt = quaternionf_rotation;
+                prev_t = t;
 
-            Mat34 P;
-            P_From_KRt(K, R, t, &P);
-            cameras_data_.emplace_back(P);
+                Cameras_Data_ARkit temp_camera = camera_datas[timestamp];
+                double focus = (temp_camera.parameter_[0] + temp_camera.parameter_[1]) / 2;
+                K << focus, 0, temp_camera.parameter_[2],
+                    0, focus, temp_camera.parameter_[3],
+                    0, 0, 1;
 
-            int image_id = temp_camera.id_;
-            std::string image_name = "frame" + std::to_string(image_id) + ".jpg";
+                // Read feature observations line.
+                // No use for us
+                std::getline(gt_file, line);
 
-            // Parse image name
-            images_.emplace_back(stlplus::filename_part(image_name));
+                Mat34 P;
+                P_From_KRt(K, R, t, &P);
+                cameras_data_.emplace_back(P);
+
+                int image_id = temp_camera.id_;
+                std::string image_name = "frame" + std::to_string(image_id) + ".jpg";
+
+                // Parse image name
+                images_.emplace_back(stlplus::filename_part(image_name));
+            }
         }
         gt_file.close();
 
