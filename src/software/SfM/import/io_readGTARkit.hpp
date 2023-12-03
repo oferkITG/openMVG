@@ -154,7 +154,7 @@ public:
 
             R = quaternionf_rotation.toRotationMatrix();
 
-            t = -R.transpose() * t;
+            t = - R * t;
 
             if (camera_datas.find(timestamp) == camera_datas.end())
                 continue;
@@ -162,7 +162,7 @@ public:
             double del_qt = quaternionf_rotation.angularDistance(prev_qt); //radian
             double del_t = sqrt((t.x() - prev_t.x()) * (t.x() - prev_t.x()) + (t.y() - prev_t.y()) * (t.y() - prev_t.y()) + (t.z() - prev_t.z()) * (t.z() - prev_t.z()));
 
-            if (del_qt > 5.0 / 180.0 * M_PI || del_t > 0.5) {
+            if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
                 prev_qt = quaternionf_rotation;
                 prev_t = t;
 
