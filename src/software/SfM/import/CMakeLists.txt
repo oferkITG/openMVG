@@ -7,6 +7,7 @@ add_executable(openMVG_main_SfMInit_ImageListingFromKnownPoses
     io_readGTDTUMVS.hpp
     io_readGTETH3D.hpp
     io_readGTKitti.hpp
+    io_readGTARkit.hpp
 )
 target_link_libraries(openMVG_main_SfMInit_ImageListingFromKnownPoses
   PRIVATE

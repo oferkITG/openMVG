@@ -1,7 +1,8 @@
 import os
 import cv2
-video_path = r"C:\work_itg\data\2023-11027 Aaron iphone open src app\2023-11-27T09-37-23\Frames.m4v"
-output_folder = r"C:\work_itg\data\2023-11027 Aaron iphone open src app\2023-11-27T09-37-23\images"
+data_path = "/DATA/ITG/ios_logger_noDepth/2023-11-27T09-37-23"
+video_path = data_path + "/Frames.m4v"
+output_folder = data_path + "/images"
 vidcap = cv2.VideoCapture(video_path)
 
 if not os.path.isdir(output_folder):
@@ -17,4 +18,5 @@ while success:
      break
   image_path = os.path.join(output_folder, "frame%d.jpg" % count)
   cv2.imwrite(image_path, image)     # save frame as JPEG file
+  print("frame: ", count, "Saved image: ", image_path, "success: ", success, "\n")
   count += 1

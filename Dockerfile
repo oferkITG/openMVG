@@ -18,26 +18,37 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata; 
   liblemon-dev \
   libpng-dev \
   libtiff-dev \
-  git \
-  python3-minimal; \
+  gdb \
+  python3-minimal \
+  python3-pip \
+  python3-tk \
+  ffmpeg libsm6 libxext6 &&\
   apt-get autoclean && apt-get clean
 
-# Clone the openvMVG repo
-ADD . /opt/openMVG
-RUN cd /opt/openMVG && git submodule update --init --recursive
+    
+RUN pip3 install \
+    scipy \
+    opencv-python \
+    matplotlib
 
-# Build
-RUN mkdir /opt/openMVG_Build; \
-  cd /opt/openMVG_Build; \
-  cmake -DCMAKE_BUILD_TYPE=RELEASE \
-    -DCMAKE_INSTALL_PREFIX="/opt/openMVG_Build/install" \
-    -DOpenMVG_BUILD_TESTS=ON \
-    -DOpenMVG_BUILD_EXAMPLES=OFF \
-    -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
-    -DLEMON_INCLUDE_DIR_HINTS=/usr/include/lemon \
-    -DCLP_INCLUDE_DIR_HINTS=/usr/include \
-    -DOSI_INCLUDE_DIR_HINTS=/usr/include \
-    ../openMVG/src; \
-    make -j 4;
+# # Clone the openvMVG repo
+# ADD . /opt/openMVG
+# RUN cd /opt/openMVG && git submodule update --init --recursive
 
-RUN cd /opt/openMVG_Build && make test && make install;
+# # Build
+# RUN mkdir /opt/openMVG_Build; \
+#   cd /opt/openMVG_Build; \
+#   cmake -DCMAKE_BUILD_TYPE=RELEASE \
+#     -DCMAKE_INSTALL_PREFIX="/opt/openMVG_Build/install" \
+#     -DOpenMVG_BUILD_TESTS=ON \
+#     -DOpenMVG_BUILD_EXAMPLES=ON \
+#     -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
+#     -DLEMON_INCLUDE_DIR_HINTS=/usr/include/lemon \
+#     -DCLP_INCLUDE_DIR_HINTS=/usr/include \
+#     -DOSI_INCLUDE_DIR_HINTS=/usr/include \
+#     ../openMVG/src; \
+#     make -j 4;
+
+# RUN cd /opt/openMVG_Build && make test && make install;
+
+   
