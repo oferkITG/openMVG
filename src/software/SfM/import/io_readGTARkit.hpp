@@ -153,8 +153,8 @@ public:
             std::getline(image_stream, substring, ',');
             quaternionf_rotation.z() = stod(substring);
 
-            t.z() = -t.z();
-            t.y() = -t.y();
+            //t.z() = -t.z();
+            //t.y() = -t.y();
             
             R = quaternionf_rotation.toRotationMatrix();
             const Mat3 transform_matrix = (Mat3() << 1, 1, 1, -1, -1, -1, -1, -1, -1).finished();
