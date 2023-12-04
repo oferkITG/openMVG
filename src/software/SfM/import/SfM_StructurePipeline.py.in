@@ -65,12 +65,19 @@ pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_Compu
 pFeatures.wait()
 
 print ("3. Compute structure")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", output_dir+"/sfm_data.json", "-m", matches_dir, "-o", reconstruction_dir+"/sfm_structure.bin","-b"] )
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", output_dir+"/sfm_data.json", "-m", matches_dir, "-o", reconstruction_dir+"/sfm_structure.bin"] )
 pRecons.wait()
 
 print ("4. Colorize Structure")
 pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_structure.bin", "-o", reconstruction_dir+"/sfm_structure_color.ply"] )
 pRecons.wait()
+
+print ("5. Export Camera Frustum")
+pConvert = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ConvertSfM_DataFormat"), "-i", reconstruction_dir+"/sfm_data.bin", "-o", output_dir+"/sfm_data_adjusted.json"])
+pConvert.wait()
+pCamFrus = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ExportCameraFrustums"), "-i", output_dir+"/sfm_data_adjusted.json", "-o", os.path.join(reconstruction_dir,"cam_frustums.ply", "-f", "0.5")])
+pCamFrus.wait()
+
 
 
 

@@ -173,7 +173,7 @@ public:
                 prev_t = t;
 
                 Cameras_Data_ARkit temp_camera = camera_datas[timestamp];
-                double focus = (temp_camera.parameter_[0] + temp_camera.parameter_[1]) / 2;
+                double focus = -(temp_camera.parameter_[0] + temp_camera.parameter_[1]) / 2;
                 K << focus, 0, temp_camera.parameter_[2],
                     0, focus, temp_camera.parameter_[3],
                     0, 0, 1;
