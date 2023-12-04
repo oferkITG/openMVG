@@ -17,11 +17,11 @@ def write_ply(filename, points):
             f.write("{} {} {}\n".format(point[0], point[1], point[2]))
 
 # Reading the data
-file_path = '/Users/aaron/Downloads/ios_logger/2023-11-27T11-09-55/ARposes.txt'  # Replace with the path to your file
+file_path = r"C:\work_itg\data\2023-11027 Aaron iphone open src app\2023-11-27T09-37-23\ARposes.txt"  # Replace with the path to your file
 ply_filename = file_path+'.ply'  # Replace with your desired output path
 
 data = pd.read_csv(file_path, header=None)
-data.columns = ['Timestamp', 'X', 'Z', 'Y', 'Value1', 'Value2', 'Value3', 'Value4']
+data.columns = ['Timestamp', 'X', 'Y', 'Z', 'Value1', 'Value2', 'Value3', 'Value4']
 
 # Calculate the range for each axis
 max_range = np.array([data['X'].max()-data['X'].min(), 

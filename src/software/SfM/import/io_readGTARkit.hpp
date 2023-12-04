@@ -45,7 +45,7 @@ public:
         const std::vector<std::string> gt_files = stlplus::folder_files(this->gt_dir_);
 
         // Make sure there we have the desired file on disk
-        if (!std::count(gt_files.cbegin(), gt_files.cend(), std::string("Frames.txt"))
+        if (!std::count(gt_files.cbegin(), gt_files.cend(), std::string("Frames_short.txt"))
             || !std::count(gt_files.cbegin(), gt_files.cend(), std::string("ARposes.txt")))
         {
             std::cerr << "Error: Maybe give wrong gt_dir!" << std::endl
@@ -55,10 +55,10 @@ public:
 
         // Read the camera file
         // Fix name "Frames.txt"
-        std::ifstream camera_data_file(stlplus::create_filespec(this->gt_dir_, "Frames.txt"), std::ifstream::in);
+        std::ifstream camera_data_file(stlplus::create_filespec(this->gt_dir_, "Frames_short.txt"), std::ifstream::in);
         if (!camera_data_file)
         {
-            std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "Frames.txt") << "' for reading" << std::endl;
+            std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "Frames_short.txt") << "' for reading" << std::endl;
             return false;
         }
         while (camera_data_file)
@@ -145,13 +145,13 @@ public:
             t(2, 0) = stod(substring);
             
             std::getline(image_stream, substring, ',');
+            quaternionf_rotation.w() = stod(substring);
+            std::getline(image_stream, substring, ',');
             quaternionf_rotation.x() = stod(substring);
             std::getline(image_stream, substring, ',');
             quaternionf_rotation.y() = stod(substring);
             std::getline(image_stream, substring, ',');
             quaternionf_rotation.z() = stod(substring);
-            std::getline(image_stream, substring, ',');
-            quaternionf_rotation.w() = stod(substring);
 
             t.z() = -t.z();
             t.y() = -t.y();
@@ -159,8 +159,8 @@ public:
             R = quaternionf_rotation.toRotationMatrix();
             const Mat3 transform_matrix = (Mat3() << 1, 1, 1, -1, -1, -1, -1, -1, -1).finished();
             const Mat3 fixed_rotation = transform_matrix.cwiseProduct(R.transpose());
-
-            t = - R * t;
+            
+            t = -R * t;
 
             if (camera_datas.find(timestamp) == camera_datas.end())
                 continue;
@@ -168,7 +168,7 @@ public:
             double del_qt = quaternionf_rotation.angularDistance(prev_qt); //radian
             double del_t = sqrt((t.x() - prev_t.x()) * (t.x() - prev_t.x()) + (t.y() - prev_t.y()) * (t.y() - prev_t.y()) + (t.z() - prev_t.z()) * (t.z() - prev_t.z()));
 
-            if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
+            //if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
                 prev_qt = quaternionf_rotation;
                 prev_t = t;
 
@@ -191,7 +191,7 @@ public:
 
                 // Parse image name
                 images_.emplace_back(stlplus::filename_part(image_name));
-            }
+            //}
         }
         gt_file.close();
 
