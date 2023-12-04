@@ -158,7 +158,7 @@ public:
             
             R = quaternionf_rotation.toRotationMatrix();
             const Mat3 transform_matrix = (Mat3() << 1, 1, 1, -1, -1, -1, -1, -1, -1).finished();
-            const Mat3 fixed_rotation = transform_matrix.cwiseProduct(R.transpose());
+            R = transform_matrix.cwiseProduct(R.transpose());
             
             t = -R * t;
 
