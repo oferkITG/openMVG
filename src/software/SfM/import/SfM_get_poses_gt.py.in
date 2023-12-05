@@ -61,5 +61,5 @@ pIntrisics = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfMI
 pIntrisics.wait()
 
 print("8. Export Camera Frustum")
-pCamFrus = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ExportCameraFrustums"), "-i", output_dir+"/sfm_data.json", "-o", os.path.join(reconstruction_dir,"cam_frustums.ply", "-c", "-n", "0.1", "-f", "0.5")])
+pCamFrus = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ExportCameraFrustums"), "-i", output_dir+"/sfm_data.json", "-o", os.path.join(reconstruction_dir,"cam_frustums.ply"), "-c", "-n", "0.1", "-f", "0.5"])
 pCamFrus.wait()
