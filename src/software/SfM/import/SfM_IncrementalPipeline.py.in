@@ -61,7 +61,7 @@ pIntrisics = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfMI
 pIntrisics.wait()
 
 print ("2. Compute features")
-pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeFeatures"),  "-i", output_dir+"/sfm_data.json", "-o", matches_dir, "-m", "SIFT"] )
+pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeFeatures"),  "-i", output_dir+"/sfm_data.json", "-o", matches_dir, "-m", "SIFT", "-n", "8"] )
 pFeatures.wait()
 
 print ("3. Compute matching pairs")
@@ -81,7 +81,7 @@ if not os.path.exists(reconstruction_dir):
     os.mkdir(reconstruction_dir)
 
 print ("6. Do Sequential/Incremental reconstruction")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"), "--sfm_engine", "INCREMENTAL", "--input_file", output_dir+"/sfm_data.json", "--match_dir", matches_dir, "--output_dir", reconstruction_dir] )
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"), "--sfm_engine", "INCREMENTALV2", "-S", "EXISTING_POSE", "--input_file", output_dir+"/sfm_data.json", "--match_dir", matches_dir, "--output_dir", reconstruction_dir] )
 pRecons.wait()
 
 print ("7. Colorize Structure")
@@ -89,5 +89,5 @@ pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_Compute
 pRecons.wait()
 
 print("8. Export Camera Frustum")
-pCamFrus = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ExportCameraFrustums"), "-i", output_dir+"/sfm_data.json", "-o", os.path.join(reconstruction_dir,"cam_frustums.ply")])
+pCamFrus = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ExportCameraFrustums"), "-i", output_dir+"/sfm_data.json", "-o", os.path.join(reconstruction_dir,"cam_frustums.ply"),  "-c", "-n", "0.1", "-f", "0.5"])
 pCamFrus.wait()
