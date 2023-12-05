@@ -45,7 +45,7 @@ public:
         const std::vector<std::string> gt_files = stlplus::folder_files(this->gt_dir_);
 
         // Make sure there we have the desired file on disk
-        if (!std::count(gt_files.cbegin(), gt_files.cend(), std::string("Frames_short.txt"))
+        if (!std::count(gt_files.cbegin(), gt_files.cend(), std::string("Frames.txt"))
             || !std::count(gt_files.cbegin(), gt_files.cend(), std::string("ARposes.txt")))
         {
             std::cerr << "Error: Maybe give wrong gt_dir!" << std::endl
@@ -55,10 +55,10 @@ public:
 
         // Read the camera file
         // Fix name "Frames.txt"
-        std::ifstream camera_data_file(stlplus::create_filespec(this->gt_dir_, "Frames_short.txt"), std::ifstream::in);
+        std::ifstream camera_data_file(stlplus::create_filespec(this->gt_dir_, "Frames.txt"), std::ifstream::in);
         if (!camera_data_file)
         {
-            std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "Frames_short.txt") << "' for reading" << std::endl;
+            std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "Frames.txt") << "' for reading" << std::endl;
             return false;
         }
         while (camera_data_file)
@@ -158,7 +158,8 @@ public:
             
             R = quaternionf_rotation.toRotationMatrix();
             const Mat3 transform_matrix = (Mat3() << 1, 1, 1, -1, -1, -1, -1, -1, -1).finished();
-            R = transform_matrix.cwiseProduct(R.transpose());
+            Mat3 Rtranspose = R.transpose();
+            R = transform_matrix.cwiseProduct(Rtranspose);
             
             t = -R * t;
 
