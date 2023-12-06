@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import sys
 
 # Function to write PLY file
 def write_ply(filename, points):
@@ -16,8 +17,11 @@ def write_ply(filename, points):
         for point in points:
             f.write("{} {} {}\n".format(point[0], point[1], point[2]))
 
+if len(sys.argv) < 1:
+    print ("Please provide a ARposes txt file")
+    sys.exit(1)
 # Reading the data
-file_path = "/DATA/ITG/ios_logger_noDepth/2023-11-27T09-37-23-small/ARposes.txt"  # Replace with the path to your file
+file_path = sys.argv[1] #"/DATA/ITG/ios_logger_noDepth/2023-11-27T09-37-23-small/ARposes.txt"  # Replace with the path to your file
 ply_filename = file_path+'.ply'  # Replace with your desired output path
 
 data = pd.read_csv(file_path, header=None)
