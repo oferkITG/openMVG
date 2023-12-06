@@ -287,6 +287,20 @@ public:
             intrinsics[view->id_intrinsic] = intrinsic;
         }
 
+        // Display saved warning & error messages if any.
+        if (!error_report_stream.str().empty())
+        {
+            OPENMVG_LOG_ERROR
+                << "\nWarning & Error messages:\n"
+                << error_report_stream.str() << std::endl;
+        }
+
+        // Group the camera that share the same set of camera parameters
+        GroupSharedIntrinsics(sfm_data);
+
+        return true;
+    }
+
 };
 
 
