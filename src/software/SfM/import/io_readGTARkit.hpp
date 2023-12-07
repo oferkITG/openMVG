@@ -29,6 +29,20 @@ struct Cameras_Data_ARkit
     std::vector<double> parameter_;
 };
 
+struct GPS_Data_ARkit
+{
+    double timestamp_;
+    double latitude_;
+    double longitude_;
+    double horizontal_accuracy_;
+    double altitude_;
+    double vertical_accuracy_;
+    double floor_;
+    double course_;
+    double speed_;
+    std::vector<double> parameter_;
+};
+
 
 // ARkit's Data store all the data in two file under the gt_dir
 // ARPoses.txt    -> camera location (timestamp, x, y, z, qw, qx, qy, qz)
@@ -38,6 +52,8 @@ class SfM_Data_GT_Loader_ARkit : public SfM_Data_GT_Loader_Interface
 private:
     std::vector<cameras::PinholeCamera> cameras_data_; // Store all the camera information
     std::map<double, Cameras_Data_ARkit> camera_datas; // Store all the dataset camera data
+    std::map<double, GPS_Data_ARkit> gps_datas; // Store all the dataset gps data
+    std::map<std::string, double> image_timestamps; // Store all the dataset image timestamp, 
 public:
     bool loadGT() override
     {
@@ -91,6 +107,57 @@ public:
             camera_datas.insert({ temp_camera.timestamp_,temp_camera });
         }
         camera_data_file.close();
+
+        // Read GPS data
+        // Fix name GPS.txt
+        std::ifstream gps_data_file(stlplus::create_filespec(this->gt_dir_, "GPS.txt"), std::ifstream::in);
+        if (!gps_data_file)
+        {
+            std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "GPS.txt") << "' for reading" << std::endl;
+            return false;
+        }
+        int gps_count = 0;
+        while (gps_data_file){
+            std::string line;
+            std::getline(gps_data_file, line);
+            if (line.size() == 0 || line[0] == '#')
+            {
+                continue;
+            }
+
+            GPS_Data_ARkit temp_gps;
+            std::string substring;
+            std::istringstream line_stream(line);
+            std::getline(line_stream, substring, ',');
+            temp_gps.timestamp_ = stod(substring);
+            std::getline(line_stream, substring, ',');
+            temp_gps.latitude_ = stod(substring);
+            std::getline(line_stream, substring, ',');
+            temp_gps.longitude_ = stod(substring);
+            std::getline(line_stream, substring, ',');
+            temp_gps.horizontal_accuracy_ = stod(substring);
+            std::getline(line_stream, substring, ',');
+            temp_gps.altitude_ = stod(substring);
+            std::getline(line_stream, substring, ',');
+            temp_gps.vertical_accuracy_ = stod(substring);
+            std::getline(line_stream, substring, ',');
+            temp_gps.floor_ = stod(substring);
+            std::getline(line_stream, substring, ',');
+            temp_gps.course_ = stod(substring);
+            std::getline(line_stream, substring, ',');
+            temp_gps.speed_ = stod(substring);
+
+            while (std::getline(line_stream, substring, ',')) {
+
+                temp_gps.parameter_.push_back(stod(substring));
+            }
+
+            gps_datas.insert({ temp_gps.timestamp_,temp_gps });
+
+            gps_count++;
+        }
+        gps_data_file.close();
+
 
         // Load the gt_data from the file
         std::ifstream gt_file(stlplus::create_filespec(this->gt_dir_, "ARposes.txt"), std::ifstream::in);
@@ -192,6 +259,9 @@ public:
 
                 // Parse image name
                 images_.emplace_back(stlplus::filename_part(image_name));
+                
+                // Store the image timestamp
+                image_timestamps.insert({ image_name, timestamp });
             //}
         }
         gt_file.close();
@@ -201,7 +271,7 @@ public:
 
     bool loadImages() override
     {
-        return LoadImages_(this->image_dir_, this->images_, this->cameras_data_, this->sfm_data_);
+        return LoadImages_(this->image_dir_, this->images_, this->cameras_data_, this->image_timestamps, this->gps_datas, this->sfm_data_);
     }
 
     bool LoadImages_
@@ -209,6 +279,8 @@ public:
         const std::string& image_dir,
         const std::vector<std::string>& images,
         const std::vector<openMVG::cameras::PinholeCamera>& cameras,
+        std::map<std::string, double>& image_timestamps,
+        const std::map<double, GPS_Data_ARkit>& gps_datas,
         openMVG::sfm::SfM_Data& sfm_data
     )
     {
@@ -227,6 +299,16 @@ public:
             OPENMVG_LOG_ERROR << "Invalid input camera data";
             return false;
         }
+        if (image_timestamps.empty())
+        {
+            OPENMVG_LOG_ERROR << "Invalid input image timestamps";
+            return false;
+        }
+        if (gps_datas.empty())
+        {
+            OPENMVG_LOG_ERROR << "Invalid input gps data";
+            return false;
+        }
 
         sfm_data.s_root_path = image_dir; // Setup main image root_path
 
@@ -243,6 +325,33 @@ public:
         {
             const std::string sImageFilename = stlplus::create_filespec(image_dir, *iter_image);
             const std::string sImFilenamePart = stlplus::filename_part(sImageFilename);
+
+            OPENMVG_LOG_INFO << "Loading image : " << sImageFilename << std::endl;
+            OPENMVG_LOG_INFO << "timestamp : " << image_timestamps[sImFilenamePart] << std::endl;
+
+            // find gps reading with closest timestamp
+            double timestamp = image_timestamps[sImFilenamePart];
+            double min_diff = 1000000000;
+            double time_limit = 0.2;
+            double closest_gps_reading = -1.0;
+            std::shared_ptr<double> closest_gps_reading_ptr=nullptr;
+            for ( const auto &gps_ : gps_datas ) {
+                std::cout << gps_.first << "\n";
+                double gps_timestamp = gps_.first;
+                double diff = fabs(gps_timestamp - timestamp);
+                if (diff < min_diff && diff < time_limit){
+                    min_diff = diff;
+                    closest_gps_reading = gps_timestamp;
+                    std::cout << min_diff << "\n";
+                }
+            }
+                
+            GPS_Data_ARkit gps_reading;
+            if (closest_gps_reading != -1.0){
+                 gps_reading= gps_datas.at(closest_gps_reading);
+            }
+
+
 
             // Test if the image format is supported
             if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
@@ -271,13 +380,21 @@ public:
             const double pyy = K(1, 2);
 
             const Pose3 pose(iter_camera->_R, iter_camera->_C);
-            const auto view = std::make_shared<sfm::View>(
-                *iter_image,
-                views.size(), views.size(), views.size(),
-                imgHeader.width, imgHeader.height);
+
+            const auto view = std::make_shared<sfm::ViewPriors>(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
+
+            if (closest_gps_reading != -1.0){
+                view->b_use_pose_center_ = true;
+                view->pose_center_ = geodesy::lla_to_utm(gps_reading.latitude_, gps_reading.longitude_, gps_reading.altitude_);
+                view->center_weight_ = Vec3(1.0, 1.0, 1.0);
+                
+            }
+                        
             const auto intrinsic = std::make_shared<openMVG::cameras::Pinhole_Intrinsic>(
                 imgHeader.width, imgHeader.height,
                 focal, pxx, pyy);
+
+            
 
             // Add the view to the sfm_container
             views[view->id_view] = view;
@@ -302,6 +419,5 @@ public:
     }
 
 };
-
 
 #endif // IO_READ_GT_ARKIT_HPP
