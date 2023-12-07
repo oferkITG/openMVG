@@ -378,27 +378,34 @@ public:
 
             const Pose3 pose(iter_camera->_R, iter_camera->_C);
 
-            const auto view = std::make_shared<sfm::ViewPriors>(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
-
-            if (closest_gps_reading != -1.0){
-                view->b_use_pose_center_ = true;
-                view->pose_center_ = geodesy::lla_to_utm(gps_reading.latitude_, gps_reading.longitude_, gps_reading.altitude_);
-                view->center_weight_ = Vec3(1.0, 1.0, 1.0);
-                
-            }
-                        
-            const auto intrinsic = std::make_shared<openMVG::cameras::Pinhole_Intrinsic>(
+            int id_pose;
+            int id_intrinsic;
+            
+             const auto intrinsic = std::make_shared<openMVG::cameras::Pinhole_Intrinsic>(
                 imgHeader.width, imgHeader.height,
                 focal, pxx, pyy);
-
             
-
-            // Add the view to the sfm_container
-            views[view->id_view] = view;
-            // Add the pose to the sfm_container
-            poses[view->id_pose] = pose;
-            // Add the intrinsic to the sfm_container
-            intrinsics[view->id_intrinsic] = intrinsic;
+            
+            if (closest_gps_reading != -1.0){
+                sfm::ViewPriors view(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
+                view.SetPoseCenterPrior(geodesy::lla_to_utm(gps_reading.latitude_, gps_reading.longitude_, gps_reading.altitude_),
+                                         Vec3(1.0, 1.0, 1.0));
+                // Add the view to the sfm_container
+                views[view.id_view] = std::make_shared<sfm::ViewPriors>(view);
+                // Add the pose to the sfm_container
+                poses[view.id_pose] = pose;
+                // Add the intrinsic to the sfm_container
+                intrinsics[view.id_intrinsic] = intrinsic;
+            }
+            else{
+                sfm::View view(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
+                // Add the view to the sfm_container
+                views[view.id_view] = std::make_shared<sfm::View>(view);
+                // Add the pose to the sfm_container
+                poses[view.id_pose] = pose;
+                // Add the intrinsic to the sfm_container
+                intrinsics[view.id_intrinsic] = intrinsic;
+            }            
         }
 
         // Display saved warning & error messages if any.
