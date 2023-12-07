@@ -327,7 +327,6 @@ public:
             const std::string sImFilenamePart = stlplus::filename_part(sImageFilename);
 
             OPENMVG_LOG_INFO << "Loading image : " << sImageFilename << std::endl;
-            OPENMVG_LOG_INFO << "timestamp : " << image_timestamps[sImFilenamePart] << std::endl;
 
             // find gps reading with closest timestamp
             double timestamp = image_timestamps[sImFilenamePart];
@@ -336,13 +335,11 @@ public:
             double closest_gps_reading = -1.0;
             std::shared_ptr<double> closest_gps_reading_ptr=nullptr;
             for ( const auto &gps_ : gps_datas ) {
-                std::cout << gps_.first << "\n";
                 double gps_timestamp = gps_.first;
                 double diff = fabs(gps_timestamp - timestamp);
                 if (diff < min_diff && diff < time_limit){
                     min_diff = diff;
                     closest_gps_reading = gps_timestamp;
-                    std::cout << min_diff << "\n";
                 }
             }
                 
