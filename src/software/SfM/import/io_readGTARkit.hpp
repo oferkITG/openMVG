@@ -65,7 +65,7 @@ public:
         {
             std::string line;
             std::getline(camera_data_file, line);
-            if (line.size() == 0 || line[0] == '#')
+            if (line.size() == 0 || line[0] == '#' || !isdigit(line[0]))
             {
                 continue;
             }
@@ -103,7 +103,7 @@ public:
         {
             std::string line;
             std::getline(gt_file, line);
-            if (line.empty() || line[0] == '#')
+            if (line.empty() || line[0] == '#' || !isdigit(line[0]))
             {
                 continue;
             }
@@ -122,7 +122,7 @@ public:
         {
             std::string line;
             std::getline(gt_file, line);
-            if (line.empty() || line[0] == '#')
+            if (line.empty() || line[0] == '#' || !isdigit(line[0]))
             {
                 continue;
             }
