@@ -1,0 +1,58 @@
+main_vpr_nfov.py
+/home/gabi/Work/october23/registration-9900/assets/ortho
+/home/gabi/Work/october23/registration-9900/assets/dsm/dsm_trex_w84utm36_12m.tif
+/home/gabi/Work/october23/registration-9900/assets/B1/ISD_DEG
+/home/gabi/Work/october23/registration-9900/results/B1
+/tmp/b1
+
+main_vpr_nfov.py
+/
+/mnt/rawdata/aza/DSM/dsm_trex_w84utm36_12m.tif
+isd/
+/mnt/artifacts/assets/vpr/output/b1
+shelef_b1
+
+
+python eval_localization.py
+shelef_b1 shelef_b1/localization_results.pkl
+
+main_vpr_nfov.py
+/mnt/artifacts/assets/vpr/aza_tiff_small
+/mnt/rawdata/aza/DSM/dsm_trex_w84utm36_12m.tif
+isd/
+/mnt/artifacts/assets/vpr/output/b2
+shelef_b2
+--max_shift_east 1000
+--shift_step_east 500
+--max_shift_north 1000
+--shift_step_north 500
+
+main_vpr_nfov.py
+/mnt/artifacts/assets/vpr/aza_tiff_small
+/mnt/rawdata/aza/DSM/dsm_trex_w84utm36_12m.tif
+isd/
+/mnt/artifacts/assets/vpr/output/b2
+shelef_b2
+--max_shift_east 2000
+--shift_step_east 500
+--max_shift_north 2000
+--shift_step_north 500
+--encoder cosplace
+--online_only
+--k 5
+
+
+main_vpr_nfov.py
+ /mnt/rawdata/aza/ortophoto/tiff/
+/mnt/rawdata/aza/DSM/dsm_trex_w84utm36_12m.tif
+isd/
+/mnt/artifacts/assets/vpr/output/b2_large
+shelef_b2_485
+--max_shift_east 2000
+--shift_step_east 500
+--max_shift_north 2000
+--shift_step_north 500
+
+
+python eval_localization.py
+shelef_b2 shelef_b2/localization_results.pkl
