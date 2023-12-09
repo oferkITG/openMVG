@@ -64,7 +64,6 @@ public:
         }
        
         std::string sImageFolder = this->gt_dir_ + "/images";
-        int image_number_count = 0;
 
         while (camera_data_file)
         {
@@ -74,17 +73,8 @@ public:
             {
                 continue;
             }
-            
-            std::string sImageFilename = stlplus::create_filespec(sImageFolder, "frame" + std::to_string(image_number_count) + ".jpg");
-            openMVG::image::ImageHeader imgHeader;
-            if (!openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
-            continue; // image cannot be read
 
             Cameras_Data_ARkit temp_camera;
-            temp_camera.width_ = imgHeader.width; //1920;
-            temp_camera.height_ = imgHeader.height; //1440;
-            temp_camera.model_name_ = "PINHOLE";
-
             std::string substring;
 
             std::istringstream line_stream(line);
@@ -92,6 +82,15 @@ public:
             temp_camera.timestamp_ = stod(substring);
             std::getline(line_stream, substring, ',');
             temp_camera.id_ = stoi(substring);
+
+            std::string sImageFilename = stlplus::create_filespec(sImageFolder, "frame" + std::to_string(temp_camera.id_) + ".jpg");
+            openMVG::image::ImageHeader imgHeader;
+            if (!openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
+            continue; // image cannot be read
+
+            temp_camera.width_ = imgHeader.width; //1920;
+            temp_camera.height_ = imgHeader.height; //1440;
+            temp_camera.model_name_ = "PINHOLE";
             
             while (std::getline(line_stream, substring, ',')) {
 
@@ -100,7 +99,6 @@ public:
 
             camera_datas.insert({ temp_camera.timestamp_,temp_camera });
 
-            image_number_count++;
         }
         camera_data_file.close();
 
@@ -110,7 +108,7 @@ public:
         {
             return false;
         }
-        image_number_count = 0;
+        int image_number_count = 0;
         while (gt_file)
         {
             std::string line;
