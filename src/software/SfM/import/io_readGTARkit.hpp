@@ -17,6 +17,7 @@
 //#include <fstream>
 //#include <iomanip>
 #include <math.h>
+#include "openMVG/image/image_io.hpp"
 
 //timestamp, frame id, flx, fly, px, py
 struct Cameras_Data_ARkit
@@ -61,6 +62,10 @@ public:
             std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "Frames.txt") << "' for reading" << std::endl;
             return false;
         }
+       
+        std::string sImageFolder = this->gt_dir_ + "/images";
+        int image_number_count = 0;
+
         while (camera_data_file)
         {
             std::string line;
@@ -69,10 +74,15 @@ public:
             {
                 continue;
             }
+            
+            std::string sImageFilename = stlplus::create_filespec(sImageFolder, "frame" + std::to_string(image_number_count) + ".jpg");
+            openMVG::image::ImageHeader imgHeader;
+            if (!openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
+            continue; // image cannot be read
 
             Cameras_Data_ARkit temp_camera;
-            temp_camera.width_ = 1920;
-            temp_camera.height_ = 1440;
+            temp_camera.width_ = imgHeader.width; //1920;
+            temp_camera.height_ = imgHeader.height; //1440;
             temp_camera.model_name_ = "PINHOLE";
 
             std::string substring;
@@ -89,6 +99,8 @@ public:
             }
 
             camera_datas.insert({ temp_camera.timestamp_,temp_camera });
+
+            image_number_count++;
         }
         camera_data_file.close();
 
@@ -98,7 +110,7 @@ public:
         {
             return false;
         }
-        int image_number_count = 0;
+        image_number_count = 0;
         while (gt_file)
         {
             std::string line;
