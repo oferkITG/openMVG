@@ -88,6 +88,10 @@ print ("7. Colorize Structure")
 pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_data.bin", "-o", os.path.join(reconstruction_dir,"colorized.ply")] )
 pRecons.wait()
 
-print("8. Export Camera Frustum")
-pCamFrus = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ExportCameraFrustums"), "-i", output_dir+"/sfm_data.json", "-o", os.path.join(reconstruction_dir,"cam_frustums.ply"),  "-c", "-n", "0.1", "-f", "0.5"])
-pCamFrus.wait()
+# print ("8. geodesy_registration_to_gps_position")
+# pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_geodesy_registration_to_gps_position"),  "-i", reconstruction_dir+"/sfm_data.bin", "-o", reconstruction_dir+"/sfm_data_adjusted.bin", "-M", "2"] )
+# pRecons.wait()
+
+# print("9. Export Camera Frustum")
+# pCamFrus = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ExportCameraFrustums"), "-i", output_dir+"/sfm_data.json", "-o", os.path.join(reconstruction_dir,"cam_frustums.ply"),  "-c", "-n", "0.1", "-f", "0.5"])
+# pCamFrus.wait()

@@ -81,7 +81,7 @@ public:
         {
             std::string line;
             std::getline(camera_data_file, line);
-            if (line.size() == 0 || line[0] == '#')
+            if (line.size() == 0 || line[0] == '#' || !isdigit(line[0]))
             {
                 continue;
             }
@@ -120,7 +120,7 @@ public:
         while (gps_data_file){
             std::string line;
             std::getline(gps_data_file, line);
-            if (line.size() == 0 || line[0] == '#')
+            if (line.size() == 0 || line[0] == '#' || !isdigit(line[0]))
             {
                 continue;
             }
@@ -133,24 +133,9 @@ public:
             std::getline(line_stream, substring, ',');
             temp_gps.latitude_ = stod(substring);
             std::getline(line_stream, substring, ',');
-            temp_gps.longitude_ = stod(substring);
-            std::getline(line_stream, substring, ',');
-            temp_gps.horizontal_accuracy_ = stod(substring);
-            std::getline(line_stream, substring, ',');
             temp_gps.altitude_ = stod(substring);
             std::getline(line_stream, substring, ',');
-            temp_gps.vertical_accuracy_ = stod(substring);
-            std::getline(line_stream, substring, ',');
-            temp_gps.floor_ = stod(substring);
-            std::getline(line_stream, substring, ',');
-            temp_gps.course_ = stod(substring);
-            std::getline(line_stream, substring, ',');
-            temp_gps.speed_ = stod(substring);
-
-            while (std::getline(line_stream, substring, ',')) {
-
-                temp_gps.parameter_.push_back(stod(substring));
-            }
+            temp_gps.longitude_ = stod(substring);
 
             gps_datas.insert({ temp_gps.timestamp_,temp_gps });
 
@@ -170,7 +155,7 @@ public:
         {
             std::string line;
             std::getline(gt_file, line);
-            if (line.empty() || line[0] == '#')
+            if (line.empty() || line[0] == '#' || !isdigit(line[0]))
             {
                 continue;
             }
@@ -189,7 +174,7 @@ public:
         {
             std::string line;
             std::getline(gt_file, line);
-            if (line.empty() || line[0] == '#')
+            if (line.empty() || line[0] == '#' || !isdigit(line[0]))
             {
                 continue;
             }
@@ -326,8 +311,8 @@ public:
             const std::string sImageFilename = stlplus::create_filespec(image_dir, *iter_image);
             const std::string sImFilenamePart = stlplus::filename_part(sImageFilename);
 
-            OPENMVG_LOG_INFO << "Loading image : " << sImageFilename << std::endl;
-            OPENMVG_LOG_INFO << "timestamp : " << image_timestamps[sImFilenamePart] << std::endl;
+//            OPENMVG_LOG_INFO << "Loading image : " << sImageFilename << std::endl;
+//            OPENMVG_LOG_INFO << "timestamp : " << image_timestamps[sImFilenamePart] << std::endl;
 
             // find gps reading with closest timestamp
             double timestamp = image_timestamps[sImFilenamePart];
@@ -336,13 +321,13 @@ public:
             double closest_gps_reading = -1.0;
             std::shared_ptr<double> closest_gps_reading_ptr=nullptr;
             for ( const auto &gps_ : gps_datas ) {
-                std::cout << gps_.first << "\n";
+                //std::cout << gps_.first << "\n";
                 double gps_timestamp = gps_.first;
                 double diff = fabs(gps_timestamp - timestamp);
                 if (diff < min_diff && diff < time_limit){
                     min_diff = diff;
                     closest_gps_reading = gps_timestamp;
-                    std::cout << min_diff << "\n";
+                    //std::cout << min_diff << "\n";
                 }
             }
                 
@@ -385,7 +370,7 @@ public:
 
             if (closest_gps_reading != -1.0){
                 view->b_use_pose_center_ = true;
-                view->pose_center_ = geodesy::lla_to_utm(gps_reading.latitude_, gps_reading.longitude_, gps_reading.altitude_);
+                view->pose_center_ = Vec3(gps_reading.latitude_, gps_reading.longitude_, gps_reading.altitude_);
                 view->center_weight_ = Vec3(1.0, 1.0, 1.0);
                 
             }
