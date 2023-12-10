@@ -64,19 +64,29 @@ print ("2. Compute features")
 pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeFeatures"),  "-i", output_dir+"/sfm_data.json", "-o", matches_dir, "-m", "SIFT","-p","HIGH"] )
 pFeatures.wait()
 
-print ("3. Compute structure")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", output_dir+"/sfm_data.json", "-m", matches_dir, "-o", reconstruction_dir+"/sfm_structure.bin"] )
+print ("3-1. Compute structure")
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", output_dir+"/sfm_data.json", "-m", matches_dir, "-o", reconstruction_dir+"/sfm_structure.bin", "-b"] )
 pRecons.wait()
+
+# print ("3-2. geodesy_registration_to_gps_position")
+# pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_geodesy_registration_to_gps_position"), "-d", gt_dir, "-i", reconstruction_dir+"/sfm_data.bin", "-o", reconstruction_dir+"/sfm_data_adjusted.bin"] )
+# pRecons.wait()
+
+# print ("3-3. Compute structure with GPS constraints")
+# pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", output_dir+"/sfm_data.json", "-m", matches_dir, "-o", reconstruction_dir+"/sfm_structure.bin"] )
+# pRecons.wait()
 
 print ("4. Colorize Structure")
 pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_structure.bin", "-o", reconstruction_dir+"/sfm_structure_color.ply"] )
 pRecons.wait()
 
-print ("5. Export Camera Frustum")
-pConvert = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ConvertSfM_DataFormat"), "-i", reconstruction_dir+"/sfm_data.bin", "-o", output_dir+"/sfm_data_adjusted.json"])
-pConvert.wait()
-pCamFrus = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ExportCameraFrustums"), "-i", output_dir+"/sfm_data_adjusted.json", "-o", os.path.join(reconstruction_dir,"cam_frustums.ply", "-f", "0.5")])
-pCamFrus.wait()
+# print ("5. Convert Data Format")
+# pConvert = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ConvertSfM_DataFormat"), "-i", reconstruction_dir+"/sfm_data.bin", "-o", output_dir+"/sfm_data_adjusted.json"])
+# pConvert.wait()
+
+# print ("6. Export Camera Frustum")
+# pCamFrus = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ExportCameraFrustums"), "-i", output_dir+"/sfm_data_adjusted.json", "-o", os.path.join(reconstruction_dir,"cam_frustums.ply", "-f", "0.5")])
+# pCamFrus.wait()
 
 
 

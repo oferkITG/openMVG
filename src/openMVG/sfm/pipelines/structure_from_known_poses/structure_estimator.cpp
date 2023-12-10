@@ -73,10 +73,13 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::run(
   const ETriangulationMethod triangulation_method
 )
 {
+  OPENMVG_LOG_INFO << "structure estimator clear...";
   sfm_data.structure.clear();
-
+  OPENMVG_LOG_INFO << "structure estimator match...";
   match(sfm_data, pairs, regions_provider);
+  OPENMVG_LOG_INFO << "structure estimator filter...";
   filter(sfm_data, pairs, regions_provider);
+  OPENMVG_LOG_INFO << "structure estimator triangulate...";
   triangulate(sfm_data, regions_provider, triangulation_method);
 }
 
@@ -97,6 +100,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
     #pragma omp single nowait
 #endif // OPENMVG_USE_OPENMP
     {
+      ++my_progress_bar;
     // --
     // Perform GUIDED MATCHING
     // --
@@ -167,7 +171,6 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
           putative_matches[pair].insert(putative_matches[pair].end(),
             vec_corresponding_indexes.begin(), vec_corresponding_indexes.end());
         }
-        ++my_progress_bar;
       }
     }
   }
