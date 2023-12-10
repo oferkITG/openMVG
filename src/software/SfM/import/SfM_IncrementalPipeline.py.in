@@ -92,10 +92,6 @@ print ("7. geodesy_registration_to_gps_position")
 pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_geodesy_registration_to_gps_position"), "-d", gt_dir, "-i", reconstruction_dir+"/sfm_data.bin", "-o", reconstruction_dir+"/sfm_data_adjusted.bin"] )
 pRecons.wait()
 
-# print ("6. Do Sequential/Incremental reconstruction")
-# pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"), "--sfm_engine", "INCREMENTAL", "--input_file", output_dir+"/sfm_data.json", "--match_dir", matches_dir, "--output_dir", reconstruction_dir, "-P"] )
-# pRecons.wait()
-
 # print ("8. Colorize Structure")
 # pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_data.bin", "-o", os.path.join(reconstruction_dir,"colorized.ply")] )
 # pRecons.wait()
