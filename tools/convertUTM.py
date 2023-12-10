@@ -1,3 +1,4 @@
+import csv
 from pyproj import Proj, transform
 import numpy as np
 from scipy.spatial.transform import Rotation as R
@@ -74,6 +75,26 @@ def apply_transformation_to_obj(file_path, rotation, translation, output_path):
     with open(output_path, 'w') as file:
         file.writelines(transformed_lines)
 
+def apply_transformation_to_anchors(file_path, rotation, translation, output_path):
+    transformed_lines = []
+
+    with open(file_path, 'r') as file:
+        for line in file:
+            if not line[0].isdigit():
+                continue
+
+            vertex = np.array(list(map(float, line.strip().split(",")[2:5])))
+            # Apply rotation and translation
+            transformed_vertex = np.dot(rotation, vertex) + translation
+            transformed_lines.append(transformed_vertex)
+
+    with open(output_path, 'w') as file:
+        file.write("X,Y,Z,\n")
+        for line in transformed_lines:
+            for item in line:
+                file.write(str(item))
+                file.write(",")
+            file.write("\n")
 
 
 # UTM coordinates (Easting, Northing, Elevation) for each waypoint
@@ -108,9 +129,13 @@ for idx, (lat, lon) in enumerate(lat_lon_coordinates, start=1):
 
 rotation, translation = find_transformation(src_points, dst_points)
 
-input_obj = 'AaronScan_3Points_2023-12-05T11-09-58/combined_mesh.obj'
-output_obj = 'AaronScan_3Points_2023-12-05T11-09-58/world oriented_mesh.obj' 
-apply_transformation_to_obj(input_obj, rotation, translation, output_obj)
+# input_obj = 'AaronScan_3Points_2023-12-05T11-09-58/combined_mesh.obj'
+# output_obj = 'AaronScan_3Points_2023-12-05T11-09-58/world oriented_mesh.obj' 
+# apply_transformation_to_obj(input_obj, rotation, translation, output_obj)
+
+input_obj = '/DATA/AaronScan_3Points_2023-12-05T11-09-58/Anchors.txt'
+output_obj = '/DATA/AaronScan_3Points_2023-12-05T11-09-58/Anchors_world_oriented.txt' 
+apply_transformation_to_anchors(input_obj, rotation, translation, output_obj)
 
 # def main(input_obj, output_obj, utm_coords, xyz_coords):
 #     # Convert UTM and XYZ lists to numpy arrays for the transformation function

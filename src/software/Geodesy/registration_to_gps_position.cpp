@@ -130,7 +130,7 @@ bool load_GPS_data(const std::string GPS_dir, const SfM_Data sfm_data, std::map<
             tmp_gps.frame_id = frm_data.frame_id;
 
             gps_data.insert({ tmp_gps.frame_id,tmp_gps });
-            //std::cout << tmp_gps.frame_id << " " << std::to_string(tmp_gps.timestamp_) << std::endl;
+            std::cout << tmp_gps.frame_id << " " << std::to_string(tmp_gps.timestamp_) << std::endl;
         }
         gps_data_file.close();
 
@@ -174,7 +174,8 @@ int main(int argc, char **argv)
       << "\t1 (default)=> registration is done using all points.\n"
 	  << "[-M|--gps_to_xyz_method] XZY Coordinate system:\n"
 	  << "\t 0: ECEF (default)\n"
-	  << "\t 1: UTM"
+	  << "\t 1: UTM\n"
+    << "\t 2: XYZ"
       << std::endl;
 
     std::cerr << s << std::endl;
@@ -229,12 +230,22 @@ int main(int argc, char **argv)
     if(gps_data_list.find(view_it.second->id_view) != gps_data_list.end()) {
       GPS_data gps_data = gps_data_list[view_it.second->id_view];
       latitude = gps_data.parameter_[0];
-      longitude = gps_data.parameter_[1];
-      altitude = gps_data.parameter_[2];
+      altitude = gps_data.parameter_[1];
+      longitude = gps_data.parameter_[2];
 
       // Add XYZ position to the GPS position array
       switch (i_GPS_XYZ_method)
       {
+      case 2:
+      {
+        openMVG::Vec3 gps_center;
+        gps_center.x() = latitude;
+        gps_center.y() = altitude;
+        gps_center.z() = longitude;
+
+        vec_gps_center.push_back(gps_center);
+        break;
+      }
       case 1:
         vec_gps_center.push_back(lla_to_utm(latitude, longitude, altitude));
         break;

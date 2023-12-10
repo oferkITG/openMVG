@@ -89,7 +89,7 @@ pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"), 
 pRecons.wait()
 
 print ("7. geodesy_registration_to_gps_position")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_geodesy_registration_to_gps_position"), "-d", gt_dir, "-i", reconstruction_dir+"/sfm_data.bin", "-o", reconstruction_dir+"/sfm_data_adjusted.bin"] )
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_geodesy_registration_to_gps_position"), "-d", gt_dir, "-i", reconstruction_dir+"/sfm_data.bin", "-o", reconstruction_dir+"/sfm_data_adjusted.bin", "-M", "2"] )
 pRecons.wait()
 
 # print ("8. Colorize Structure")
