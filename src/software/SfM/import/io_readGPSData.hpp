@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <string>
 #include <map>
+#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::sfm;

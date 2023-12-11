@@ -526,7 +526,8 @@ bool SequentialSfMReconstructionEngine2::BundleAdjustment()
       ReconstructionEngine::extrinsic_refinement_options_,
       Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
       Control_Point_Parameter(),
-      this->b_use_motion_prior_
+      this->b_use_motion_prior_,
+      this->s_gps_dir
     );
   return bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
 }

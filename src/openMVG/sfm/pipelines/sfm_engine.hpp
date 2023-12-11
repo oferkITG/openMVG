@@ -75,6 +75,14 @@ public:
     b_use_motion_prior_ = rhs;
   }
 
+  void Set_GPS_Dir
+  (
+    std::string gps_dir
+  )
+  {
+    s_gps_dir = gps_dir;
+  }
+
   const SfM_Data & Get_SfM_Data() const {return sfm_data_;}
 
 protected:
@@ -91,6 +99,7 @@ protected:
   cameras::Intrinsic_Parameter_Type intrinsic_refinement_options_;
   sfm::Extrinsic_Parameter_Type extrinsic_refinement_options_;
   bool b_use_motion_prior_;
+  std::string s_gps_dir;
 };
 
 } // namespace sfm

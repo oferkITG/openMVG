@@ -32,6 +32,8 @@
 #include <iostream>
 #include <limits>
 
+#include "software/SfM/import/io_readGPSData.hpp"
+
 namespace openMVG {
 namespace sfm {
 
@@ -177,24 +179,60 @@ bool Bundle_Adjustment_Ceres::Adjust
   // parameters for cameras and points are added automatically.
   //----------
 
-
   double pose_center_robust_fitting_error = 0.0;
   openMVG::geometry::Similarity3 sim_to_center;
   bool b_usable_prior = false;
   if (options.use_motion_priors_opt && sfm_data.GetViews().size() > 3)
   {
     // - Compute a robust X-Y affine transformation & apply it
-    // - This early transformation enhance the conditionning (solution closer to the Prior coordinate system)
+    // - This early transformation enhance the conditioning (solution closer to the Prior coordinate system)
     {
       // Collect corresponding camera centers
       std::vector<Vec3> X_SfM, X_GPS;
-      for (const auto & view_it : sfm_data.GetViews())
+      if(options.gps_dir_opt.size() > 0) // arkit hack
       {
-        const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
-        if (prior != nullptr && prior->b_use_pose_center_ && sfm_data.IsPoseAndIntrinsicDefined(prior))
+        std::map<int,GPS_data> gps_data_list;
+        if(!load_GPS_data(options.gps_dir_opt, sfm_data, gps_data_list))
         {
-          X_SfM.push_back( sfm_data.GetPoses().at(prior->id_pose).center() );
-          X_GPS.push_back( prior->pose_center_ );
+          std::cerr
+            << "\nThe input GPS_Data couldn't be read" << std::endl;
+          return EXIT_FAILURE;
+        }
+
+        for (const auto & view_it : sfm_data.GetViews())
+        {
+          const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
+          double latitude, longitude, altitude;
+
+          // Check existence of GPS coordinates
+          if(gps_data_list.find(view_it.second->id_view) != gps_data_list.end()) {
+            GPS_data gps_data = gps_data_list[view_it.second->id_view];
+            latitude = gps_data.parameter_[0];
+            altitude = gps_data.parameter_[1];
+            longitude = gps_data.parameter_[2];
+
+            openMVG::Vec3 gps_center;
+            gps_center.x() = latitude;
+            gps_center.y() = altitude;
+            gps_center.z() = longitude;
+
+            X_SfM.push_back( sfm_data.GetPoses().at(prior->id_pose).center() );
+            X_GPS.push_back(gps_center);
+
+            OPENMVG_LOG_INFO << "GPS, view: " << view_it.second->id_view << " , lla: " << latitude << "," << longitude << "," << altitude;
+          }
+        }
+
+      } else { // non arkit GPS source
+        
+        for (const auto & view_it : sfm_data.GetViews())
+        {
+          const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
+          if (prior != nullptr && prior->b_use_pose_center_ && sfm_data.IsPoseAndIntrinsicDefined(prior))
+          {
+            X_SfM.push_back( sfm_data.GetPoses().at(prior->id_pose).center() );
+            X_GPS.push_back( prior->pose_center_ );
+          }
         }
       }
       openMVG::geometry::Similarity3 sim;
@@ -230,6 +268,8 @@ bool Bundle_Adjustment_Ceres::Adjust
           }
           sim_to_center = openMVG::geometry::Similarity3(openMVG::sfm::Pose3(Mat3::Identity(), pose_centroid), 1.0);
           openMVG::sfm::ApplySimilarity(sim_to_center, sfm_data, true);
+
+          OPENMVG_LOG_INFO << "GPS registration done";
         }
       }
       else
@@ -494,6 +534,7 @@ bool Bundle_Adjustment_Ceres::Adjust
 
 
   // Solve BA
+  OPENMVG_LOG_INFO << "Starting solving BA";
   ceres::Solver::Summary summary;
   ceres::Solve(ceres_config_options, &problem, &summary);
   if (ceres_options_.bCeres_summary_)
@@ -507,7 +548,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   }
   else // Solution is usable
   {
-    if (ceres_options_.bVerbose_)
+    //if (ceres_options_.bVerbose_)
     {
       // Display statistics about the minimization
       OPENMVG_LOG_INFO

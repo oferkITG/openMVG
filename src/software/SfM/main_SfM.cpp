@@ -166,7 +166,8 @@ int main(int argc, char **argv)
       directory_match,
       filename_match,
       directory_output,
-      engine_name = "INCREMENTAL";
+      engine_name = "INCREMENTAL",
+      gps_dir;
 
   // Bundle adjustment options:
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
@@ -195,6 +196,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('M', filename_match, "match_file") );
   cmd.add( make_option('o', directory_output, "output_dir") );
   cmd.add( make_option('s', engine_name, "sfm_engine") );
+  cmd.add( make_option('d', gps_dir, "gps_dir") );
 
   // Bundle adjustment options
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refine_intrinsic_config") );
@@ -230,6 +232,7 @@ int main(int argc, char **argv)
       << "[-m|--match_dir] path to the matches that corresponds to the provided SfM_Data scene\n"
       << "[-o|--output_dir] path where the output data will be stored\n"
       << "[-s|--sfm_engine] Type of SfM Engine to use for the reconstruction\n"
+      << "[-d| --gps_dir] arkit gps dir"
       << "\t INCREMENTAL   : add image sequentially to a 2 view seed\n"
       << "\t INCREMENTALV2 : add image sequentially to a 2 or N view seed (experimental)\n"
       << "\t GLOBAL        : initialize globally rotation and translations\n"
@@ -604,6 +607,7 @@ int main(int argc, char **argv)
   sfm_engine->Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
   sfm_engine->Set_Extrinsics_Refinement_Type(extrinsic_refinement_options);
   sfm_engine->Set_Use_Motion_Prior(b_use_motion_priors);
+  sfm_engine->Set_GPS_Dir(gps_dir);
 
   //---------------------------------------
   // Sequential reconstruction process
