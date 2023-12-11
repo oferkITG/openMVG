@@ -201,7 +201,6 @@ bool Bundle_Adjustment_Ceres::Adjust
 
         for (const auto & view_it : sfm_data.GetViews())
         {
-          const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
           double latitude, longitude, altitude;
 
           // Check existence of GPS coordinates
@@ -216,7 +215,7 @@ bool Bundle_Adjustment_Ceres::Adjust
             gps_center.y() = altitude;
             gps_center.z() = longitude;
 
-            X_SfM.push_back( sfm_data.GetPoses().at(prior->id_pose).center() );
+            X_SfM.push_back( sfm_data.GetPoses().at(view_it.second->id_pose).center() );
             X_GPS.push_back(gps_center);
 
             OPENMVG_LOG_INFO << "GPS, view: " << view_it.second->id_view << " , lla: " << latitude << "," << longitude << "," << altitude;
