@@ -8,6 +8,7 @@ add_executable(openMVG_main_SfMInit_ImageListingFromKnownPoses
     io_readGTETH3D.hpp
     io_readGTKitti.hpp
     io_readGTARkit.hpp
+    io_readGPSData.hpp
 )
 target_link_libraries(openMVG_main_SfMInit_ImageListingFromKnownPoses
   PRIVATE
