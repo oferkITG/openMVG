@@ -236,7 +236,7 @@ public:
             double del_qt = quaternionf_rotation.angularDistance(prev_qt); //radian
             double del_t = sqrt((t.x() - prev_t.x()) * (t.x() - prev_t.x()) + (t.y() - prev_t.y()) * (t.y() - prev_t.y()) + (t.z() - prev_t.z()) * (t.z() - prev_t.z()));
 
-            //if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
+            if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
                 prev_qt = quaternionf_rotation;
                 prev_t = t;
 
@@ -262,7 +262,7 @@ public:
                 
                 // Store the image timestamp
                 image_timestamps.insert({ image_name, timestamp });
-            //}
+            }
         }
         gt_file.close();
 
@@ -386,18 +386,18 @@ public:
                 focal, pxx, pyy);
             
             
-            if (closest_gps_reading != -1.0){
-                sfm::ViewPriors view(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
-                view.SetPoseCenterPrior(geodesy::lla_to_utm(gps_reading.latitude_, gps_reading.longitude_, gps_reading.altitude_),
-                                         Vec3(1.0, 1.0, 1.0));
-                // Add the view to the sfm_container
-                views[view.id_view] = std::make_shared<sfm::ViewPriors>(view);
-                // Add the pose to the sfm_container
-                poses[view.id_pose] = pose;
-                // Add the intrinsic to the sfm_container
-                intrinsics[view.id_intrinsic] = intrinsic;
-            }
-            else{
+            // if (closest_gps_reading != -1.0){
+            //     sfm::ViewPriors view(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
+            //     view.SetPoseCenterPrior(geodesy::lla_to_utm(gps_reading.latitude_, gps_reading.longitude_, gps_reading.altitude_),
+            //                              Vec3(1.0, 1.0, 1.0));
+            //     // Add the view to the sfm_container
+            //     views[view.id_view] = std::make_shared<sfm::ViewPriors>(view);
+            //     // Add the pose to the sfm_container
+            //     poses[view.id_pose] = pose;
+            //     // Add the intrinsic to the sfm_container
+            //     intrinsics[view.id_intrinsic] = intrinsic;
+            // }
+            // else{
                 sfm::View view(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
                 // Add the view to the sfm_container
                 views[view.id_view] = std::make_shared<sfm::View>(view);
@@ -405,7 +405,7 @@ public:
                 poses[view.id_pose] = pose;
                 // Add the intrinsic to the sfm_container
                 intrinsics[view.id_intrinsic] = intrinsic;
-            }            
+            // }            
         }
 
         // Display saved warning & error messages if any.
