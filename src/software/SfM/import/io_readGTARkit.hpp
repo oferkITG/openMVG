@@ -407,7 +407,7 @@ public:
             
             if (closest_gps_reading != -1.0){
                 sfm::ViewPriors view(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
-                view.SetPoseCenterPrior(Vec3(gps_reading.lat, gps_reading.lon, gps_reading.alt),
+                view.SetPoseCenterPrior(Vec3(gps_reading.lat, gps_reading.alt, gps_reading.lon),
                                          Vec3(1.0, 1.0, 1.0));
                 // Add the view to the sfm_container
                 views[view.id_view] = std::make_shared<sfm::ViewPriors>(view);
