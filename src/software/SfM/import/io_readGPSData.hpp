@@ -17,7 +17,9 @@ struct GPS_data{
     double timestamp_;
     int gps_id;
     int frame_id;
-    std::vector<double> parameter_;
+    double lat;
+    double lon;
+    double alt;
 };
 
 //timestamp, frame id, flx, fly, px, py
@@ -75,17 +77,42 @@ bool load_GPS_data(const std::string GPS_dir, const SfM_Data sfm_data, std::map<
 
             GPS_data tmp_gps;
             std::string substring;
+            Mat3 K, R;
+            Vec3 t;
+            Eigen::Quaterniond quaternionf_rotation;
 
-            std::istringstream line_stream(line);
-            std::getline(line_stream, substring, ',');
+            std::istringstream image_stream(line);
+
+            std::getline(image_stream, substring, ',');
             tmp_gps.timestamp_ = stod(substring);
-            std::getline(line_stream, substring, ',');
-            tmp_gps.gps_id = stoi(substring);
+            std::getline(image_stream, substring, ',');
+            tmp_gps.gps_id = stod(substring);
+            std::getline(image_stream, substring, ',');
+            t(0, 0) = stod(substring);
+            std::getline(image_stream, substring, ',');
+            t(1, 0) = stod(substring);
+            std::getline(image_stream, substring, ',');
+            t(2, 0) = stod(substring);
             
-            while (std::getline(line_stream, substring, ',')) {
+            std::getline(image_stream, substring, ',');
+            quaternionf_rotation.w() = stod(substring);
+            std::getline(image_stream, substring, ',');
+            quaternionf_rotation.x() = stod(substring);
+            std::getline(image_stream, substring, ',');
+            quaternionf_rotation.y() = stod(substring);
+            std::getline(image_stream, substring, ',');
+            quaternionf_rotation.z() = stod(substring);
+            
+            R = quaternionf_rotation.toRotationMatrix();
+            const Mat3 transform_matrix = (Mat3() << 1, 1, 1, -1, -1, -1, -1, -1, -1).finished();
+            Mat3 Rtranspose = R.transpose();
+            R = transform_matrix.cwiseProduct(Rtranspose);
+            
+            t = -R * t;
 
-                tmp_gps.parameter_.push_back(stod(substring));
-            }
+            tmp_gps.lat = t.x();
+            tmp_gps.lon = t.z();
+            tmp_gps.alt = t.y();
 
             std::map<double, Frame_Data>::iterator frm_data_it = frame_datas.find(tmp_gps.timestamp_);
             if(frm_data_it == frame_datas.end()) {

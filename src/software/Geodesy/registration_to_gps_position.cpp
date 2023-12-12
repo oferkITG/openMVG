@@ -127,9 +127,9 @@ int main(int argc, char **argv)
     // Check existence of GPS coordinates
     if(gps_data_list.find(view_it.second->id_view) != gps_data_list.end()) {
       GPS_data gps_data = gps_data_list[view_it.second->id_view];
-      latitude = gps_data.parameter_[0];
-      altitude = gps_data.parameter_[1];
-      longitude = gps_data.parameter_[2];
+      latitude = gps_data.lat;
+      altitude = gps_data.alt;
+      longitude = gps_data.lon;
 
       // Add XYZ position to the GPS position array
       switch (i_GPS_XYZ_method)

@@ -206,9 +206,9 @@ bool Bundle_Adjustment_Ceres::Adjust
           // Check existence of GPS coordinates
           if(gps_data_list.find(view_it.second->id_view) != gps_data_list.end()) {
             GPS_data gps_data = gps_data_list[view_it.second->id_view];
-            latitude = gps_data.parameter_[0];
-            altitude = gps_data.parameter_[1];
-            longitude = gps_data.parameter_[2];
+            latitude = gps_data.lat;
+            longitude = gps_data.lon;
+            altitude = gps_data.alt;
 
             openMVG::Vec3 gps_center;
             gps_center.x() = latitude;
