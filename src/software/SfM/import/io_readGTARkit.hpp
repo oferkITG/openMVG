@@ -242,7 +242,7 @@ public:
             double del_qt = quaternionf_rotation.angularDistance(prev_qt); //radian
             double del_t = sqrt((t.x() - prev_t.x()) * (t.x() - prev_t.x()) + (t.y() - prev_t.y()) * (t.y() - prev_t.y()) + (t.z() - prev_t.z()) * (t.z() - prev_t.z()));
 
-            //if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
+            if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
                 prev_qt = quaternionf_rotation;
                 prev_t = t;
 
@@ -268,7 +268,7 @@ public:
                 
                 // Store the image timestamp
                 image_timestamps.insert({ image_name, timestamp });
-            //}
+            }
         }
         gt_file.close();
 
@@ -332,8 +332,7 @@ public:
             const std::string sImageFilename = stlplus::create_filespec(image_dir, *iter_image);
             const std::string sImFilenamePart = stlplus::filename_part(sImageFilename);
 
-//            OPENMVG_LOG_INFO << "Loading image : " << sImageFilename << std::endl;
-//            OPENMVG_LOG_INFO << "timestamp : " << image_timestamps[sImFilenamePart] << std::endl;
+            OPENMVG_LOG_INFO << "Loading image : " << sImageFilename << std::endl;
 
             // find gps reading with closest timestamp
             double timestamp = image_timestamps[sImFilenamePart];
@@ -342,13 +341,11 @@ public:
             double closest_gps_reading = -1.0;
             std::shared_ptr<double> closest_gps_reading_ptr=nullptr;
             for ( const auto &gps_ : gps_datas ) {
-                //std::cout << gps_.first << "\n";
                 double gps_timestamp = gps_.first;
                 double diff = fabs(gps_timestamp - timestamp);
                 if (diff < min_diff && diff < time_limit){
                     min_diff = diff;
                     closest_gps_reading = gps_timestamp;
-                    //std::cout << min_diff << "\n";
                 }
             }
                 
@@ -387,27 +384,40 @@ public:
 
             const Pose3 pose(iter_camera->_R, iter_camera->_C);
 
-            const auto view = std::make_shared<sfm::ViewPriors>(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
+            // const auto view = std::make_shared<sfm::ViewPriors>(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
 
-            if (closest_gps_reading != -1.0){
-                view->b_use_pose_center_ = true;
-                view->pose_center_ = Vec3(gps_reading.lat, gps_reading.lon, gps_reading.alt);
-                view->center_weight_ = Vec3(1.0, 1.0, 1.0);
+            // if (closest_gps_reading != -1.0){
+            //     view->b_use_pose_center_ = true;
+            //     view->pose_center_ = Vec3(gps_reading.latitude_, gps_reading.longitude_, gps_reading.altitude_);
+            //     view->center_weight_ = Vec3(1.0, 1.0, 1.0);
                 
-            }
+            // }
                         
             const auto intrinsic = std::make_shared<openMVG::cameras::Pinhole_Intrinsic>(
                 imgHeader.width, imgHeader.height,
                 focal, pxx, pyy);
-
             
-
-            // Add the view to the sfm_container
-            views[view->id_view] = view;
-            // Add the pose to the sfm_container
-            poses[view->id_pose] = pose;
-            // Add the intrinsic to the sfm_container
-            intrinsics[view->id_intrinsic] = intrinsic;
+            
+            if (closest_gps_reading != -1.0){
+                sfm::ViewPriors view(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
+                view.SetPoseCenterPrior(Vec3(gps_reading.lat, gps_reading.lon, gps_reading.alt),
+                                         Vec3(1.0, 1.0, 1.0));
+                // Add the view to the sfm_container
+                views[view.id_view] = std::make_shared<sfm::ViewPriors>(view);
+                // Add the pose to the sfm_container
+                poses[view.id_pose] = pose;
+                // Add the intrinsic to the sfm_container
+                intrinsics[view.id_intrinsic] = intrinsic;
+            }
+            else{
+                sfm::View view(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
+                // Add the view to the sfm_container
+                views[view.id_view] = std::make_shared<sfm::View>(view);
+                // Add the pose to the sfm_container
+                poses[view.id_pose] = pose;
+                // Add the intrinsic to the sfm_container
+                intrinsics[view.id_intrinsic] = intrinsic;
+            }            
         }
 
         // Display saved warning & error messages if any.
