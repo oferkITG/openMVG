@@ -112,7 +112,7 @@ public:
             std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "Anchors.txt") << "' for reading" << std::endl;
             return false;
         }
-        int gps_count = 0;
+
         while (gps_data_file){
             std::string line;
             std::getline(gps_data_file, line);
@@ -161,9 +161,31 @@ public:
             temp_gps.lon = t.z();
             temp_gps.alt = t.y();
 
+            std::map<double, Cameras_Data_ARkit>::iterator frm_data_it = camera_datas.find(temp_gps.timestamp_);
+            if(frm_data_it == camera_datas.end()) {
+              
+              for (frm_data_it = camera_datas.begin(); frm_data_it != camera_datas.end(); frm_data_it++) {
+                std::map<double, Cameras_Data_ARkit>::iterator tmp_frm_data_nxt = std::next(frm_data_it);
+                if((temp_gps.timestamp_ > frm_data_it->second.timestamp_ && temp_gps.timestamp_ < tmp_frm_data_nxt->second.timestamp_)) {
+                  break;
+                }
+              }
+
+              assert(frm_data_it != camera_datas.end());
+              
+              std::map<double, Cameras_Data_ARkit>::iterator frm_data_nxt = std::next(frm_data_it);
+              if((temp_gps.timestamp_ - frm_data_it->second.timestamp_) < (temp_gps.timestamp_ - frm_data_nxt->second.timestamp_)) 
+                frm_data_it = frm_data_it;
+              else
+                frm_data_it = frm_data_nxt;
+            }
+            
+            Cameras_Data_ARkit frm_data = frm_data_it->second;
+            temp_gps.frame_id = frm_data.id_;
+            temp_gps.timestamp_ = frm_data.timestamp_;
+
             gps_datas.insert({ temp_gps.timestamp_,temp_gps });
 
-            gps_count++;
         }
         gps_data_file.close();
 
@@ -242,7 +264,7 @@ public:
             double del_qt = quaternionf_rotation.angularDistance(prev_qt); //radian
             double del_t = sqrt((t.x() - prev_t.x()) * (t.x() - prev_t.x()) + (t.y() - prev_t.y()) * (t.y() - prev_t.y()) + (t.z() - prev_t.z()) * (t.z() - prev_t.z()));
 
-            if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
+            //if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
                 prev_qt = quaternionf_rotation;
                 prev_t = t;
 
@@ -268,7 +290,7 @@ public:
                 
                 // Store the image timestamp
                 image_timestamps.insert({ image_name, timestamp });
-            }
+            //}
         }
         gt_file.close();
 
@@ -315,15 +337,6 @@ public:
             OPENMVG_LOG_ERROR << "Invalid input gps data";
             return false;
         }
-        
-        std::map<double, GPS_Data_ARkit> remain_gps_datas;
-        std::map<double, GPS_Data_ARkit>::const_iterator it = gps_datas.begin();
-        while(it != gps_datas.end())
-        {
-            remain_gps_datas[it->first] = it->second;
-            ++it;
-        }
-        sfm_data.s_root_path = image_dir; // Setup main image root_path
 
         Views& views = sfm_data.views;
         Poses& poses = sfm_data.poses;
@@ -343,25 +356,14 @@ public:
 
             // find gps reading with closest timestamp
             double timestamp = image_timestamps[sImFilenamePart];
-            double min_diff = 1000000000;
-            double time_limit = 0.2;
-            double closest_gps_reading = -1.0;
-            std::shared_ptr<double> closest_gps_reading_ptr=nullptr;
-            for ( const auto &gps_ : remain_gps_datas ) {
-                double gps_timestamp = gps_.first;
-                double diff = fabs(gps_timestamp - timestamp);
-                if (diff < min_diff && diff < time_limit){
-                    min_diff = diff;
-                    closest_gps_reading = gps_timestamp;
-                }
-            }
-                
-            GPS_Data_ARkit gps_reading;
-            if (closest_gps_reading != -1.0){
-                 gps_reading= remain_gps_datas.at(closest_gps_reading);
-                 remain_gps_datas.erase(closest_gps_reading);
-            }
 
+            GPS_Data_ARkit gps_reading;
+            bool found_gps = false;
+            //const std::map<double, GPS_Data_ARkit>::iterator gps_it = gps_datas.find(timestamp);
+            if(gps_datas.find(timestamp) != gps_datas.end()) {
+                gps_reading = gps_datas.at(timestamp);
+                found_gps = true;
+            }
 
             // Test if the image format is supported
             if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
@@ -390,22 +392,13 @@ public:
             const double pyy = K(1, 2);
 
             const Pose3 pose(iter_camera->_R, iter_camera->_C);
-
-            // const auto view = std::make_shared<sfm::ViewPriors>(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
-
-            // if (closest_gps_reading != -1.0){
-            //     view->b_use_pose_center_ = true;
-            //     view->pose_center_ = Vec3(gps_reading.latitude_, gps_reading.longitude_, gps_reading.altitude_);
-            //     view->center_weight_ = Vec3(1.0, 1.0, 1.0);
-                
-            // }
                         
             const auto intrinsic = std::make_shared<openMVG::cameras::Pinhole_Intrinsic>(
                 imgHeader.width, imgHeader.height,
                 focal, pxx, pyy);
             
             
-            if (closest_gps_reading != -1.0){
+            if(found_gps) {
                 sfm::ViewPriors view(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);
                 view.SetPoseCenterPrior(Vec3(gps_reading.lat, gps_reading.alt, gps_reading.lon),
                                          Vec3(1.0, 1.0, 1.0));
