@@ -32,15 +32,11 @@ struct Cameras_Data_ARkit
 struct GPS_Data_ARkit
 {
     double timestamp_;
-    double latitude_;
-    double longitude_;
-    double horizontal_accuracy_;
-    double altitude_;
-    double vertical_accuracy_;
-    double floor_;
-    double course_;
-    double speed_;
-    std::vector<double> parameter_;
+    int gps_id;
+    int frame_id;
+    double lat;
+    double lon;
+    double alt;
 };
 
 
@@ -110,10 +106,10 @@ public:
 
         // Read GPS data
         // Fix name GPS.txt
-        std::ifstream gps_data_file(stlplus::create_filespec(this->gt_dir_, "GPS.txt"), std::ifstream::in);
+        std::ifstream gps_data_file(stlplus::create_filespec(this->gt_dir_, "Anchors.txt"), std::ifstream::in);
         if (!gps_data_file)
         {
-            std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "GPS.txt") << "' for reading" << std::endl;
+            std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "Anchors.txt") << "' for reading" << std::endl;
             return false;
         }
         int gps_count = 0;
@@ -126,16 +122,44 @@ public:
             }
 
             GPS_Data_ARkit temp_gps;
+            // Read image info line.
+            Mat3 K, R;
+            Vec3 t;
+            Eigen::Quaterniond quaternionf_rotation;
+            std::istringstream image_stream(line);
+
             std::string substring;
-            std::istringstream line_stream(line);
-            std::getline(line_stream, substring, ',');
+            std::getline(image_stream, substring, ',');
             temp_gps.timestamp_ = stod(substring);
-            std::getline(line_stream, substring, ',');
-            temp_gps.latitude_ = stod(substring);
-            std::getline(line_stream, substring, ',');
-            temp_gps.altitude_ = stod(substring);
-            std::getline(line_stream, substring, ',');
-            temp_gps.longitude_ = stod(substring);
+            std::getline(image_stream, substring, ',');
+            temp_gps.gps_id = stod(substring);
+            
+            std::getline(image_stream, substring, ',');
+            t(0, 0) = stod(substring);
+            std::getline(image_stream, substring, ',');
+            t(1, 0) = stod(substring);
+            std::getline(image_stream, substring, ',');
+            t(2, 0) = stod(substring);
+            
+            std::getline(image_stream, substring, ',');
+            quaternionf_rotation.w() = stod(substring);
+            std::getline(image_stream, substring, ',');
+            quaternionf_rotation.x() = stod(substring);
+            std::getline(image_stream, substring, ',');
+            quaternionf_rotation.y() = stod(substring);
+            std::getline(image_stream, substring, ',');
+            quaternionf_rotation.z() = stod(substring);
+            
+            R = quaternionf_rotation.toRotationMatrix();
+            const Mat3 transform_matrix = (Mat3() << 1, 1, 1, -1, -1, -1, -1, -1, -1).finished();
+            Mat3 Rtranspose = R.transpose();
+            R = transform_matrix.cwiseProduct(Rtranspose);
+            
+            t = -R * t;
+
+            temp_gps.lat = t.x();
+            temp_gps.lon = t.z();
+            temp_gps.alt = t.y();
 
             gps_datas.insert({ temp_gps.timestamp_,temp_gps });
 
@@ -204,9 +228,6 @@ public:
             quaternionf_rotation.y() = stod(substring);
             std::getline(image_stream, substring, ',');
             quaternionf_rotation.z() = stod(substring);
-
-            //t.z() = -t.z();
-            //t.y() = -t.y();
             
             R = quaternionf_rotation.toRotationMatrix();
             const Mat3 transform_matrix = (Mat3() << 1, 1, 1, -1, -1, -1, -1, -1, -1).finished();
@@ -370,7 +391,7 @@ public:
 
             if (closest_gps_reading != -1.0){
                 view->b_use_pose_center_ = true;
-                view->pose_center_ = Vec3(gps_reading.latitude_, gps_reading.longitude_, gps_reading.altitude_);
+                view->pose_center_ = Vec3(gps_reading.lat, gps_reading.lon, gps_reading.alt);
                 view->center_weight_ = Vec3(1.0, 1.0, 1.0);
                 
             }
