@@ -1,6 +1,13 @@
 import os
+import sys
 import cv2
-data_path = "/DATA/ITG/ios_logger_noDepth/2023-11-27T09-37-23"
+
+if len(sys.argv) < 1:
+    print ("Please provide arkit data folder")
+    sys.exit(1)
+# Reading the data
+data_path = sys.argv[1]
+
 video_path = data_path + "/Frames.m4v"
 output_folder = data_path + "/images"
 vidcap = cv2.VideoCapture(video_path)
