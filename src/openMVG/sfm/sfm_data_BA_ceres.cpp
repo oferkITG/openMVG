@@ -201,24 +201,19 @@ bool Bundle_Adjustment_Ceres::Adjust
 
         for (const auto & view_it : sfm_data.GetViews())
         {
-          double latitude, longitude, altitude;
-
           // Check existence of GPS coordinates
           if(gps_data_list.find(view_it.second->id_view) != gps_data_list.end()) {
             GPS_data gps_data = gps_data_list[view_it.second->id_view];
-            latitude = gps_data.lat;
-            longitude = gps_data.lon;
-            altitude = gps_data.alt;
 
             openMVG::Vec3 gps_center;
-            gps_center.x() = latitude;
-            gps_center.y() = altitude;
-            gps_center.z() = longitude;
+            gps_center.x() = gps_data.lat;
+            gps_center.y() = gps_data.alt;
+            gps_center.z() = gps_data.lon;
 
             X_SfM.push_back( sfm_data.GetPoses().at(view_it.second->id_pose).center() );
             X_GPS.push_back(gps_center);
 
-            OPENMVG_LOG_INFO << "GPS, view: " << view_it.second->id_view << " , lla: " << latitude << "," << longitude << "," << altitude;
+            OPENMVG_LOG_INFO << "GPS, view: " << view_it.second->id_view << " , lla: " << gps_data.lat << "," << gps_data.lon << "," << gps_data.alt;
           }
         }
 

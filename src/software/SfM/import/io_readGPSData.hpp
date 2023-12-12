@@ -137,7 +137,7 @@ bool load_GPS_data(const std::string GPS_dir, const SfM_Data sfm_data, std::map<
             tmp_gps.frame_id = frm_data.frame_id;
 
             gps_data.insert({ tmp_gps.frame_id,tmp_gps });
-            std::cout << tmp_gps.frame_id << " " << std::to_string(tmp_gps.timestamp_) << std::endl;
+            //std::cout << tmp_gps.frame_id << " " << std::to_string(tmp_gps.timestamp_) << std::endl;
         }
         gps_data_file.close();
 
