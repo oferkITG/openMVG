@@ -24,8 +24,8 @@ if len(sys.argv) < 1:
 file_path = sys.argv[1] #"/DATA/ITG/ios_logger_noDepth/2023-11-27T09-37-23-small/ARposes.txt"  # Replace with the path to your file
 ply_filename = file_path+'.ply'  # Replace with your desired output path
 
-data = pd.read_csv(file_path, header=None)
-data.columns = ['Timestamp', 'X', 'Y', 'Z', 'Value1', 'Value2', 'Value3', 'Value4']
+data = pd.read_csv(file_path)
+data.columns = ['Timestamp', 'anchor_id', 'X', 'Y', 'Z', 'Value1', 'Value2', 'Value3', 'Value4']
 
 # Calculate the range for each axis
 max_range = np.array([data['X'].max()-data['X'].min(), 
