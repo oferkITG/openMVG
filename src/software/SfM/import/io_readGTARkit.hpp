@@ -315,7 +315,14 @@ public:
             OPENMVG_LOG_ERROR << "Invalid input gps data";
             return false;
         }
-
+        
+        std::map<double, GPS_Data_ARkit> remain_gps_datas;
+        std::map<double, GPS_Data_ARkit>::const_iterator it = gps_datas.begin();
+        while(it != gps_datas.end())
+        {
+            remain_gps_datas[it->first] = it->second;
+            ++it;
+        }
         sfm_data.s_root_path = image_dir; // Setup main image root_path
 
         Views& views = sfm_data.views;
@@ -332,7 +339,7 @@ public:
             const std::string sImageFilename = stlplus::create_filespec(image_dir, *iter_image);
             const std::string sImFilenamePart = stlplus::filename_part(sImageFilename);
 
-            OPENMVG_LOG_INFO << "Loading image : " << sImageFilename << std::endl;
+            //OPENMVG_LOG_INFO << "Loading image : " << sImageFilename << std::endl;
 
             // find gps reading with closest timestamp
             double timestamp = image_timestamps[sImFilenamePart];
@@ -340,7 +347,7 @@ public:
             double time_limit = 0.2;
             double closest_gps_reading = -1.0;
             std::shared_ptr<double> closest_gps_reading_ptr=nullptr;
-            for ( const auto &gps_ : gps_datas ) {
+            for ( const auto &gps_ : remain_gps_datas ) {
                 double gps_timestamp = gps_.first;
                 double diff = fabs(gps_timestamp - timestamp);
                 if (diff < min_diff && diff < time_limit){
@@ -351,9 +358,9 @@ public:
                 
             GPS_Data_ARkit gps_reading;
             if (closest_gps_reading != -1.0){
-                 gps_reading= gps_datas.at(closest_gps_reading);
+                 gps_reading= remain_gps_datas.at(closest_gps_reading);
+                 remain_gps_datas.erase(closest_gps_reading);
             }
-
 
 
             // Test if the image format is supported
@@ -408,6 +415,8 @@ public:
                 poses[view.id_pose] = pose;
                 // Add the intrinsic to the sfm_container
                 intrinsics[view.id_intrinsic] = intrinsic;
+
+                OPENMVG_LOG_INFO << "adding gps data to view is: " << view.id_view;
             }
             else{
                 sfm::View view(*iter_image, views.size(), views.size(), views.size(), imgHeader.width, imgHeader.height);

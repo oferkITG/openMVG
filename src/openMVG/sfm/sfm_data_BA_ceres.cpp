@@ -176,7 +176,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   //----------
-
+  OPENMVG_LOG_INFO << "Bundle_Adjustment_Ceres::Adjust";
 
   double pose_center_robust_fitting_error = 0.0;
   openMVG::geometry::Similarity3 sim_to_center;
@@ -195,6 +195,8 @@ bool Bundle_Adjustment_Ceres::Adjust
         {
           X_SfM.push_back( sfm_data.GetPoses().at(prior->id_pose).center() );
           X_GPS.push_back( prior->pose_center_ );
+
+          OPENMVG_LOG_INFO << "adding gps to pose id: " << prior->id_pose;
         }
       }
       openMVG::geometry::Similarity3 sim;
@@ -453,6 +455,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   // Add Pose prior constraints if any
   if (b_usable_prior)
   {
+    OPENMVG_LOG_INFO << "using gps priors.";
     for (const auto & view_it : sfm_data.GetViews())
     {
       const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
@@ -494,6 +497,7 @@ bool Bundle_Adjustment_Ceres::Adjust
 
 
   // Solve BA
+  OPENMVG_LOG_INFO << "Starting BA";
   ceres::Solver::Summary summary;
   ceres::Solve(ceres_config_options, &problem, &summary);
   if (ceres_options_.bCeres_summary_)
@@ -507,7 +511,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   }
   else // Solution is usable
   {
-    if (ceres_options_.bVerbose_)
+    //if (ceres_options_.bVerbose_)
     {
       // Display statistics about the minimization
       OPENMVG_LOG_INFO
@@ -527,6 +531,8 @@ bool Bundle_Adjustment_Ceres::Adjust
     // Update camera poses with refined data
     if (options.extrinsics_opt != Extrinsic_Parameter_Type::NONE)
     {
+      OPENMVG_LOG_INFO << "Update camera poses with refined data.";
+
       for (auto & pose_it : sfm_data.poses)
       {
         const IndexT indexPose = pose_it.first;
