@@ -402,7 +402,7 @@ inline int ReadImage( const char * path, Image<unsigned char> * im )
 
 /**
 * @brief Generic Image read from file (overload for RGBColor)
-* @param[in] path Input image path
+* @param[in] path Input image path```
 * @param[out] im Ouput image
 * @retval 0 if there was an errir during read operation
 * @retval 1 if read is correct

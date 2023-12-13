@@ -25,7 +25,8 @@ namespace sfm {
 bool ColorizeTracks(
   const SfM_Data & sfm_data,
   std::vector<Vec3> & vec_3dPoints,
-  std::vector<Vec3> & vec_tracksColor)
+  std::vector<Vec3> & vec_tracksColor,
+  const std::string & sSfM_Images_path)
 {
   // Colorize each track
   // Start with the most representative image
@@ -91,12 +92,15 @@ bool ColorizeTracks(
       const View * view = sfm_data.GetViews().at(view_index).get();
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
         view->s_Img_path);
+
+      std::string image_file_path = sSfM_Images_path + "//" + sView_filename.c_str();
+      
       image::Image<image::RGBColor> image_rgb;
       image::Image<unsigned char> image_gray;
-      const bool b_rgb_image = ReadImage(sView_filename.c_str(), &image_rgb);
+      const bool b_rgb_image = ReadImage(image_file_path.c_str(), &image_rgb);
       if (!b_rgb_image) //try Gray level
       {
-        const bool b_gray_image = ReadImage(sView_filename.c_str(), &image_gray);
+        const bool b_gray_image = ReadImage(image_file_path.c_str(), &image_gray);
         if (!b_gray_image)
         {
           OPENMVG_LOG_ERROR << "Cannot open provided the image.";

@@ -38,9 +38,11 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string
+    sSfM_Images_path_In,
     sSfM_Data_Filename_In,
     sOutputPLY_Out;
 
+  cmd.add(make_option('m', sSfM_Images_path_In, "image_path"));
   cmd.add(make_option('i', sSfM_Data_Filename_In, "input_file"));
   cmd.add(make_option('o', sOutputPLY_Out, "output_file"));
 
@@ -49,6 +51,7 @@ int main(int argc, char **argv)
       cmd.process(argc, argv);
   } catch (const std::string& s) {
       OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
+        << "[-m|--image_path] path to the input images\n"
         << "[-i|--input_file] path to the input SfM_Data scene\n"
         << "[-o|--output_file] path to the output PLY file";
 
@@ -72,7 +75,7 @@ int main(int argc, char **argv)
 
   // Compute the scene structure color
   std::vector<Vec3> vec_3dPoints, vec_tracksColor, vec_camPosition;
-  if (ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor))
+  if (ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor, sSfM_Images_path_In))
   {
     GetCameraPositions(sfm_data, vec_camPosition);
 

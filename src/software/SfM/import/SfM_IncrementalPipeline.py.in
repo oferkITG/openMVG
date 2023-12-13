@@ -46,52 +46,51 @@ print ("      gt_dir     : ", gt_dir)
 print ("      gt_type    : ", gt_type)
 print ("      output_dir : ", output_dir)
 
-# Create the ouput/matches folder if not present
-if not os.path.exists(output_dir):
-  os.mkdir(output_dir)
-if not os.path.exists(matches_dir):
-  os.mkdir(matches_dir)
+# # Create the ouput/matches folder if not present
+# if not os.path.exists(output_dir):
+#   os.mkdir(output_dir)
+# if not os.path.exists(matches_dir):
+#   os.mkdir(matches_dir)
 
-# Create the reconstruction if not present
-if not os.path.exists(reconstruction_dir):
-    os.mkdir(reconstruction_dir)
+# # Create the reconstruction if not present
+# if not os.path.exists(reconstruction_dir):
+#     os.mkdir(reconstruction_dir)
 
-print ("1. Load GT with Intrinsic analysis")
-pIntrisics = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfMInit_ImageListingFromKnownPoses"),  "-i", input_dir, "-g", gt_dir, "-t", gt_type, "-o", output_dir] )
-pIntrisics.wait()
+# print ("1. Load GT with Intrinsic analysis")
+# pIntrisics = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfMInit_ImageListingFromKnownPoses"),  "-i", input_dir, "-g", gt_dir, "-t", gt_type, "-o", output_dir] )
+# pIntrisics.wait()
 
-print ("2. Compute features")
-pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeFeatures"),  "-i", output_dir+"/sfm_data.json", "-o", matches_dir, "-m", "SIFT", "-n", "8"] )
-pFeatures.wait()
-
-print ("3. Compute matching pairs")
-pPairs = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_PairGenerator"), "-i", output_dir+"/sfm_data.json", "-o" , matches_dir + "/pairs.bin", "-m", "CONTIGUOUS", "-c", "10" ] )
-pPairs.wait()
+# print ("2. Compute features")
+# pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeFeatures"),  "-i", output_dir+"/sfm_data.json", "-o", matches_dir, "-m", "SIFT", "-n", "8"] )
+# pFeatures.wait()
 
 # print ("3. Compute matching pairs")
-# pPairs = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_FrustumFiltering"), "-i", output_dir+"/sfm_data.json", "-o" , matches_dir + "/pairs.bin" ] )
+# pPairs = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_PairGenerator"), "-i", output_dir+"/sfm_data.json", "-o" , matches_dir + "/pairs.bin", "-m", "CONTIGUOUS", "-c", "10" ] )
 # pPairs.wait()
 
-print ("4. Compute matches")
-pMatches = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeMatches"),  "-i", output_dir+"/sfm_data.json", "-p", matches_dir+ "/pairs.bin", "-o", matches_dir + "/matches.putative.bin" ] )
-pMatches.wait()
+# print ("4. Compute matches")
+# pMatches = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeMatches"),  "-i", output_dir+"/sfm_data.json", "-p", matches_dir+ "/pairs.bin", "-o", matches_dir + "/matches.putative.bin" ] )
+# pMatches.wait()
 
-print ("5. Filter matches" )
-pFiltering = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_GeometricFilter"), "-i", output_dir+"/sfm_data.json", "-m", matches_dir+"/matches.putative.bin" , "-g" , "f" , "-o" , matches_dir+"/matches.f.bin" ] )
-pFiltering.wait()
+# print ("5. Filter matches" )
+# pFiltering = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_GeometricFilter"), "-i", output_dir+"/sfm_data.json", "-m", matches_dir+"/matches.putative.bin" , "-g" , "f" , "-o" , matches_dir+"/matches.f.bin" ] )
+# pFiltering.wait()
 
-# Create the reconstruction if not present
-if not os.path.exists(reconstruction_dir):
-    os.mkdir(reconstruction_dir)
+# # Create the reconstruction if not present
+# if not os.path.exists(reconstruction_dir):
+#     os.mkdir(reconstruction_dir)
 
-print ("6. Do Sequential/Incremental reconstruction")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"), "-P",  "--sfm_engine", "INCREMENTALV2", "-S", "EXISTING_POSE", "--input_file", output_dir+"/sfm_data.json", "--match_dir", matches_dir, "--output_dir", reconstruction_dir] )
+# print ("6. Do Sequential/Incremental reconstruction")
+# pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"),  "--sfm_engine", "INCREMENTALV2", "-S", "EXISTING_POSE", "--input_file", output_dir+"/sfm_data.json", "--match_dir", matches_dir, "--output_dir", reconstruction_dir] )
+# pRecons.wait()
+
+# print ("7. geodesy_registration_to_gps_position")
+# pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_geodesy_registration_to_gps_position"), "-d", gt_dir, "-i", reconstruction_dir+"/sfm_data.bin", "-o", reconstruction_dir+"/sfm_data_adjusted.bin", "-M", "2"] )
+# pRecons.wait()
+
+print ("7. Colorize Structure")
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"), "-m", input_dir , "-i", reconstruction_dir+"/sfm_data_adjusted.bin", "-o", os.path.join(reconstruction_dir,"colorized.ply")] )
 pRecons.wait()
-
-print ("7. geodesy_registration_to_gps_position")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_geodesy_registration_to_gps_position"), "-d", gt_dir, "-i", reconstruction_dir+"/sfm_data.bin", "-o", reconstruction_dir+"/sfm_data_adjusted.bin", "-M", "2"] )
-pRecons.wait()
-
 
 # print("9. Export Camera Frustum")
 # pCamFrus = subprocess.Popen([os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ExportCameraFrustums"), "-i", output_dir+"/sfm_data.json", "-o", os.path.join(reconstruction_dir,"cam_frustums.ply"),  "-c", "-n", "0.1", "-f", "0.5"])

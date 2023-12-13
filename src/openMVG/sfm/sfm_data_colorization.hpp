@@ -20,8 +20,8 @@ struct SfM_Data;
 bool ColorizeTracks(
   const SfM_Data & sfm_data,
   std::vector<Vec3> & vec_3dPoints,
-  std::vector<Vec3> & vec_tracksColor);
-
+  std::vector<Vec3> & vec_tracksColor,
+  const std::string & sSfM_Images_path="");
 } // namespace sfm
 } // namespace openMVG
 
