@@ -352,6 +352,8 @@ public:
         Poses& poses = sfm_data.poses;
         Intrinsics& intrinsics = sfm_data.intrinsics;
 
+        sfm_data.s_root_path = image_dir;
+        
         system::LoggerProgress my_progress_bar(images.size(), "- Loading dataset images -");
         std::ostringstream error_report_stream;
         auto iter_camera = cameras.cbegin();
