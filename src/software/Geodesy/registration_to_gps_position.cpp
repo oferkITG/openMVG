@@ -170,10 +170,10 @@ int main(int argc, char **argv)
     << std::endl;
 
   // Export the corresponding poses (for debugging & see the transformation)
-  plyHelper::exportToPly( vec_gps_center,
-    stlplus::create_filespec(stlplus::folder_part(sSfM_Data_Filename_Out), "GPS_position", "ply"));
-  plyHelper::exportToPly( vec_sfm_center,
-    stlplus::create_filespec(stlplus::folder_part(sSfM_Data_Filename_Out), "SFM_position", "ply"));
+  // plyHelper::exportToPly( vec_gps_center,
+  //   stlplus::create_filespec(stlplus::folder_part(sSfM_Data_Filename_Out), "GPS_position", "ply"));
+  // plyHelper::exportToPly( vec_sfm_center,
+  //   stlplus::create_filespec(stlplus::folder_part(sSfM_Data_Filename_Out), "SFM_position", "ply"));
 
   {
     // Convert positions to the appropriate data container
