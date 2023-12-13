@@ -17,6 +17,7 @@
 //#include <fstream>
 //#include <iomanip>
 #include <math.h>
+#include "openMVG/image/image_io.hpp"
 
 //timestamp, frame id, flx, fly, px, py
 struct Cameras_Data_ARkit
@@ -73,6 +74,9 @@ public:
             std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_, "Frames.txt") << "' for reading" << std::endl;
             return false;
         }
+       
+        std::string sImageFolder = this->gt_dir_ + "/images";
+
         while (camera_data_file)
         {
             std::string line;
@@ -83,10 +87,6 @@ public:
             }
 
             Cameras_Data_ARkit temp_camera;
-            temp_camera.width_ = 1920;
-            temp_camera.height_ = 1440;
-            temp_camera.model_name_ = "PINHOLE";
-
             std::string substring;
 
             std::istringstream line_stream(line);
@@ -94,6 +94,15 @@ public:
             temp_camera.timestamp_ = stod(substring);
             std::getline(line_stream, substring, ',');
             temp_camera.id_ = stoi(substring);
+
+            std::string sImageFilename = stlplus::create_filespec(sImageFolder, "frame" + std::to_string(temp_camera.id_) + ".jpg");
+            openMVG::image::ImageHeader imgHeader;
+            if (!openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
+            continue; // image cannot be read
+
+            temp_camera.width_ = imgHeader.width; //1920;
+            temp_camera.height_ = imgHeader.height; //1440;
+            temp_camera.model_name_ = "PINHOLE";
             
             while (std::getline(line_stream, substring, ',')) {
 
@@ -101,6 +110,7 @@ public:
             }
 
             camera_datas.insert({ temp_camera.timestamp_,temp_camera });
+
         }
         camera_data_file.close();
 
@@ -264,7 +274,7 @@ public:
             double del_qt = quaternionf_rotation.angularDistance(prev_qt); //radian
             double del_t = sqrt((t.x() - prev_t.x()) * (t.x() - prev_t.x()) + (t.y() - prev_t.y()) * (t.y() - prev_t.y()) + (t.z() - prev_t.z()) * (t.z() - prev_t.z()));
 
-            //if (del_qt > 10.0 / 180.0 * M_PI || del_t > 1) {
+            //if (del_qt > 5.0 / 180.0 * M_PI || del_t > 0.5) {
                 prev_qt = quaternionf_rotation;
                 prev_t = t;
 

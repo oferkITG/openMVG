@@ -177,6 +177,9 @@ int main(int argc, char **argv)
     }
   }
 
+  OPENMVG_LOG_INFO
+      << "start triangulation:";
+
   if (bDirect_triangulation)
   {
     // Load some structure observations to triangulate
@@ -345,6 +348,8 @@ int main(int argc, char **argv)
     //------------------------------------------
     // Compute Structure from known camera poses
     //------------------------------------------
+    OPENMVG_LOG_INFO
+      << "Compute Structure from known camera poses:";
     SfM_Data_Structure_Estimation_From_Known_Poses structure_estimator(dMax_reprojection_error);
     structure_estimator.run(sfm_data, pairs, regions_provider,
       static_cast<ETriangulationMethod>(triangulation_method));
