@@ -1,12 +1,8 @@
 import glob
 import os
-from typing import List, Type, Set
-
-import cv2
-import numpy as np
+from typing import List, Type
 import torch
 from pathlib import Path
-from tqdm import tqdm
 from tools.vpr.encode_dataset import VprEncoder
 from tools.vpr.options import options
 from tools.vpr_scenarios import VprScenario, Scenario_2023_11_27T90_37_23
