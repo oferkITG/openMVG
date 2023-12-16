@@ -105,6 +105,9 @@ class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
     size_t NN
   ) override
   {
+    if(NN == -1)
+      NN = memMapping->rows();
+      
     if (!memMapping ||
         NN > memMapping->rows() ||
         nbQuery < 1)
