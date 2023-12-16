@@ -196,7 +196,7 @@ bool Bundle_Adjustment_Ceres::Adjust
           X_SfM.push_back( sfm_data.GetPoses().at(prior->id_pose).center() );
           X_GPS.push_back( prior->pose_center_ );
 
-          OPENMVG_LOG_INFO << "adding gps to pose id: " << prior->id_pose;
+          //OPENMVG_LOG_INFO << "adding gps to pose id: " << prior->id_pose;
         }
       }
       openMVG::geometry::Similarity3 sim;
@@ -212,7 +212,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         {
           b_usable_prior = true; // PRIOR can be used safely
 
-          // Compute the median residual error once the registration is applied
+        // Compute the median residual error once the registration is applied
           for (Vec3 & pos : X_SfM) // Transform SfM poses for residual computation
           {
             pos = sim(pos);
@@ -471,6 +471,8 @@ bool Bundle_Adjustment_Ceres::Adjust
           new ceres::HuberLoss(
             Square(pose_center_robust_fitting_error)),
                    &map_poses.at(prior->id_view)[0]);
+
+        OPENMVG_LOG_INFO << "using gps priors for view: " << prior->id_view << " ,residual: " << pose_center_robust_fitting_error;
       }
     }
   }

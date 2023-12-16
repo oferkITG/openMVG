@@ -22,7 +22,8 @@
 enum EPairMode
 {
   PAIR_EXHAUSTIVE = 0, // Build every combination of image pairs
-  PAIR_CONTIGUOUS = 1  // Only consecutive image pairs (useful for video mode)
+  PAIR_CONTIGUOUS = 1,  // Only consecutive image pairs (useful for video mode)
+  PAIR_POSES = 2
 };
 
 using namespace openMVG;
@@ -37,6 +38,7 @@ void usage( const char* argv0 )
             << "[-m|--pair_mode] mode     Pair generation mode\n"
             << "       EXHAUSTIVE:        Build all possible pairs. [default]\n"
             << "       CONTIGUOUS:        Build pairs for contiguous images (use it with --contiguous_count parameter)\n"
+            << "       POSES:             Build pairs based on camera pose distance\n"
             << "[-c|--contiguous_count] X Number of contiguous links\n"
             << "       X: will match 0 with (1->X), ...]\n"
             << "       2: will match 0 with (1,2), 1 with (2,3), ...\n"

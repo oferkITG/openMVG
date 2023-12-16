@@ -28,7 +28,8 @@ enum ePairMode
 {
   PAIR_MODE_EXHAUSTIVE = 0,
   PAIR_MODE_CONTIGUOUS = 1,
-  PAIR_MODE_NEIGHBORHOOD = 2
+  PAIR_MODE_NEIGHBORHOOD = 2,
+  PAIR_MODE_POSE = 3
 };
 
 /// Export an adjacency matrix as a SVG file
@@ -95,6 +96,7 @@ int main(int argc, char **argv)
   std::string s_out_file;
   int i_neighbor_count = 5;
   int i_mode(PAIR_MODE_EXHAUSTIVE);
+  double pose_distance = 10;
 
   cmd.add( make_option('i', s_SfM_Data_filename, "input_file") );
   cmd.add( make_option('o', s_out_file, "output_file") );
@@ -102,6 +104,8 @@ int main(int argc, char **argv)
   cmd.add( make_switch('G', "gps_mode"));
   cmd.add( make_switch('V', "video_mode"));
   cmd.add( make_switch('E', "exhaustive_mode"));
+  cmd.add( make_switch('P', "pose_mode"));
+  cmd.add( make_option('d', pose_distance, "pose_distance"));
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -115,8 +119,10 @@ int main(int argc, char **argv)
       << "\t[-E|--exhaustive_mode] exhaustive mode (default mode)\n"
       << "\t[-V|--video_mode] link views that belongs to contiguous poses ids\n"
       << "\t[-G|--gps_mode] use the pose center priors to link neighbor views\n"
-      << "Note: options V & G are linked the following parameter:\n"
-      << "\t [-n|--neighbor_count] number of maximum neighbor";
+      << "\t[-P|--pose_mode] use the pose center priors to link neighbor views\n"
+      << "Note: options V & G & P are linked the following parameter:\n"
+      << "\t [-n|--neighbor_count] number of maximum neighbor"
+      << "\t [-d|--pose_distance] pose distance";
 
     OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
@@ -130,17 +136,19 @@ int main(int argc, char **argv)
     << "Optional parameters:" << "\n"
     << "--exhaustive_mode " << (cmd.used('E') ? "ON" : "OFF") << "\n"
     << "--video_mode " <<  (cmd.used('V') ? "ON" : "OFF") << "\n"
-    << "--gps_mode "  << (cmd.used('G') ? "ON" : "OFF") << "\n";
+    << "--gps_mode "  << (cmd.used('G') ? "ON" : "OFF") << "\n"
+    << "--pose_mode "  << (cmd.used('P') ? "ON" : "OFF") << "\n";
   if (cmd.used('V') || cmd.used('G'))
     OPENMVG_LOG_INFO << "--neighbor_count " << i_neighbor_count;
-
+  if ( cmd.used('P'))
+    OPENMVG_LOG_INFO << "--pose_distance " << pose_distance;
 
   //--
   // Check validity of the input parameters
   //--
 
   // pair list mode
-  if ( int(cmd.used('E')) + int(cmd.used('V')) + int(cmd.used('G')) > 1)
+  if ( int(cmd.used('E')) + int(cmd.used('V')) + int(cmd.used('G') + int(cmd.used('P'))) > 1)
   {
     OPENMVG_LOG_ERROR << "You can use only one matching mode.";
     return EXIT_FAILURE;
@@ -151,10 +159,12 @@ int main(int argc, char **argv)
     i_mode = PAIR_MODE_CONTIGUOUS;
   else if (cmd.used('G'))
     i_mode = PAIR_MODE_NEIGHBORHOOD;
+  else if (cmd.used('P'))
+    i_mode = PAIR_MODE_POSE;
 
   // Input SfM_Data scene
   SfM_Data sfm_data;
-  if (!Load(sfm_data, s_SfM_Data_filename, ESfM_Data(VIEWS|INTRINSICS)))
+  if (!Load(sfm_data, s_SfM_Data_filename, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS)))
   {
     OPENMVG_LOG_ERROR << "The input SfM_Data file \"" << s_SfM_Data_filename << "\" cannot be read.";
     return EXIT_FAILURE;
@@ -257,6 +267,70 @@ int main(int argc, char **argv)
             if (idxI > idxJ)
               std::swap(idxI, idxJ);
             pose_pairs.insert(Pair(idxI, idxJ));
+          }
+        }
+        ++contiguous_pose_id;
+      }
+    }
+    break;
+    case PAIR_MODE_POSE:
+    {
+      // List the poses priors
+      std::vector<Vec3> vec_pose_centers;
+      std::map<IndexT, IndexT> contiguous_to_pose_id;
+      std::set<IndexT> used_pose_ids;
+      sfm::Poses poses = sfm_data.GetPoses();
+      if (poses.empty())
+      {
+        OPENMVG_LOG_ERROR << "no poses found in sfm_data";
+        return EXIT_FAILURE;
+      }
+
+      for (const auto & view_it : sfm_data.GetViews())
+      {
+        const sfm::View* view = dynamic_cast<sfm::View*>(view_it.second.get());
+
+        if (view != nullptr && used_pose_ids.count(view->id_pose) == 0)
+        {
+          sfm::Poses::iterator it = poses.find(view->id_pose);
+          if(it!=poses.end())
+          {
+            sfm::Pose3 pose = it->second;
+            vec_pose_centers.push_back(pose.center());
+            contiguous_to_pose_id[contiguous_to_pose_id.size()] = view->id_pose;
+            used_pose_ids.insert(view->id_pose);
+          }
+        }
+      }
+      if (vec_pose_centers.empty())
+      {
+        OPENMVG_LOG_ERROR << "You are trying to use the pose_mode but your data does"
+          << " not have any pose priors.";
+      }
+      // Compute i_neighbor_count neighbor(s) for each pose
+      matching::ArrayMatcherBruteForce<double> matcher;
+      if (!matcher.Build(vec_pose_centers[0].data(), vec_pose_centers.size(), 3))
+      {
+        return EXIT_FAILURE;
+      }
+      size_t contiguous_pose_id = 0;
+      for (const Vec3 pose_it : vec_pose_centers)
+      {
+        const double * query = pose_it.data();
+        IndMatches vec_indices;
+        std::vector<double> vec_distance;
+        const int NN = i_neighbor_count + 1; // since itself will be found
+        if (matcher.SearchNeighbours(query, 1, &vec_indices, &vec_distance, -1))
+        {
+          for (size_t i = 1; i < vec_indices.size(); ++i)
+          {
+            if(vec_distance[i] < pose_distance) {
+              IndexT idxI = contiguous_to_pose_id.at(contiguous_pose_id);
+              IndexT idxJ = contiguous_to_pose_id.at(vec_indices[i].j_);
+              if (idxI > idxJ)
+                std::swap(idxI, idxJ);
+              pose_pairs.insert(Pair(idxI, idxJ));
+            }
           }
         }
         ++contiguous_pose_id;
