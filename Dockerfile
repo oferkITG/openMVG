@@ -22,6 +22,11 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata; 
   python3-minimal \
   python3-pip \
   python3-tk \
+  qtcreator \
+  qtbase5-dev \
+  qt5-qmake \
+  libqglviewer-dev-qt5 \
+  libqt5svg5-dev \
   ffmpeg libsm6 libxext6 &&\
   apt-get autoclean && apt-get clean
 
