@@ -39,4 +39,6 @@ SET(OPENMVG_TUTORIAL_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/SfM_IncrementalPipelineG
 CONFIGURE_FILE(${OPENMVG_TUTORIAL_IN_FILE}
     "${CMAKE_CURRENT_BINARY_DIR}/SfM_IncrementalPipelineGpsPrior.py" @ONLY)
 
-    
+    SET(OPENMVG_TUTORIAL_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/SfM_IncrementalPipeline_ordered.py.in")
+    CONFIGURE_FILE(${OPENMVG_TUTORIAL_IN_FILE}
+        "${CMAKE_CURRENT_BINARY_DIR}/SfM_IncrementalPipeline_ordered.py" @ONLY)
