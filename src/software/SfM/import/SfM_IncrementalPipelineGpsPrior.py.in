@@ -84,13 +84,9 @@ print ("6. Do Sequential/Incremental reconstruction")
 pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"), "--sfm_engine", "INCREMENTALV2", "-S", "EXISTING_POSE", "--input_file", output_dir+"/sfm_data.json", "--match_dir", matches_dir, "--output_dir", reconstruction_dir] )
 pRecons.wait()
 
-print ("6. Do gps registration")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "registration_to_gps_position.cpp"), "--input_file", output_dir+"/sfm_data.json", "--match_dir", matches_dir, "--output_dir", reconstruction_dir] )
+print ("8. Colorize Structure")
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_data.bin", "-o", os.path.join(reconstruction_dir,"colorized.ply")] )
 pRecons.wait()
-
-# print ("7. Colorize Structure")
-# pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_data.bin", "-o", os.path.join(reconstruction_dir,"colorized.ply")] )
-# pRecons.wait()
 
 # # now correcting with GPS data
 # print("8. Georegistation")
