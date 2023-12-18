@@ -65,7 +65,7 @@ pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_Compu
 pFeatures.wait()
 
 print ("3. Compute matching pairs")
-pPairs = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_PairGenerator"), "-i", output_dir+"/sfm_data.json", "-o" , matches_dir + "/pairs.bin", "-m", "CONTIGUOUS", "-c", "10" ] )
+pPairs = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ListMatchingPairs"), "-i", output_dir+"/sfm_data.json", "-o" , matches_dir + "/pairs.bin", "-P", "-d", "5"] )
 pPairs.wait()
 
 print ("4. Compute matches")
