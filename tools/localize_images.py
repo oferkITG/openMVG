@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from tools.vpr.utils.vpr_utils import get_nearest_neighbors
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 
 def search_db(db: torch.Tensor, db_offset: int, target_encoding: torch.Tensor, label: str, results_path: Path, plot_flag: bool):

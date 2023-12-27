@@ -1,7 +1,7 @@
 import os
 import cv2
-data_path = "/home/gabi/Work/october23/tunnels/DATA/2023-11-27-20231207T082758Z-001/2023-11-27T90-37-23"
-video_path = data_path + "/Frames.avi"
+data_path = "/october23/tunnels/DATA/BLUR"
+video_path = data_path + "/test_video_with_blur.mp4"
 output_folder = data_path + "/images"
 vidcap = cv2.VideoCapture(video_path)
 

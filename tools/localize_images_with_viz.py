@@ -194,14 +194,11 @@ def estimate_relative_pose(match: MatchHypothesis, K: np.ndarray):
     match.relative_pose_wrt_target_frame = rel_pose
 
 
-def match_pair(match: MatchHypothesis, images_path: Path, plot_flag: bool, save_flag: bool, device: torch.device, results_path: str = None, K: np.ndarray = None, filter_type: FilterType = FilterType.HOMOGRAPHY):
+def match_pair(superpoint, superglue, match: MatchHypothesis, images_path: Path, plot_flag: bool, save_flag: bool, device: torch.device, results_path: str = None, K: np.ndarray = None, filter_type: FilterType = FilterType.HOMOGRAPHY):
     ref_img: np.ndarray = cv2.imread(str(images_path / "frame{0:d}.jpg".format(match.target_frame_idx)), cv2.IMREAD_GRAYSCALE)
     ref_img = cv2.resize(ref_img, [ref_img.shape[1] // 2, ref_img.shape[0] // 2])
     img: np.ndarray = cv2.imread(str(images_path / "frame{0:d}.jpg".format(match.frame_idx)), cv2.IMREAD_GRAYSCALE)
     img = cv2.resize(img, [img.shape[1] // 2, img.shape[0] // 2])
-
-    superglue = SuperGlue({'weights': 'outdoor'}).to(device).eval()
-    superpoint = SuperPoint({}).to(device).eval()
 
     kp_ref: KeypointData = superpoint.detectAndCompute(ref_img, device)
     kp_img: KeypointData = superpoint.detectAndCompute(img, device)
